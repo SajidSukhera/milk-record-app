@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دودھ ریکارڈ کیپر</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2196F3;
+            --primary-dark: #1976D2;
+            --primary-light: #BBDEFB;
+            --success: #4CAF50;
+            --success-light: #C8E6C9;
+            --danger: #f44336;
+            --danger-light: #FFCDD2;
+            --warning: #FF9800;
+            --warning-light: #FFE0B2;
+            --purple: #9C27B0;
+            --purple-light: #E1BEE7;
+            --bg-light: #f5f5f5;
+            --text-dark: #333;
+            --text-muted: #666;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --shadow-lg: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-light);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 { font-size: 1.5rem; margin-bottom: 5px; }
+        .header p { font-size: 0.9rem; opacity: 0.9; }
+
+        /* Container */
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 18px 15px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            border-radius: 0 0 0 60px;
+            opacity: 0.1;
+        }
+
+        .stat-card.suppliers::before { background: var(--success); }
+        .stat-card.customers::before { background: var(--warning); }
+        .stat-card.buy::before { background: var(--success); }
+        .stat-card.sell::before { background: var(--warning); }
+        .stat-card.balance::before { background: var(--danger); }
+        .stat-card.total::before { background: var(--primary); }
+
+        .stat-card:hover { transform: translateY(-3px); }
+
+        .stat-card.suppliers { border-top: 4px solid var(--success); }
+        .stat-card.customers { border-top: 4px solid var(--warning); }
+        .stat-card.buy { border-top: 4px solid var(--success); }
+        .stat-card.sell { border-top: 4px solid var(--warning); }
+        .stat-card.balance { border-top: 4px solid var(--danger); }
+        .stat-card.total { border-top: 4px solid var(--primary); }
+
+        .stat-card h3 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .stat-card .unit { font-size: 0.75rem; color: #999; }
+
+        /* Tabs */
+        .main-tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        .main-tab {
+            flex: 1;
+            min-width: fit-content;
+            padding: 12px 15px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .main-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Form Section */
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .form-title {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            direction: rtl;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Type Selector */
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .type-btn span { display: block; font-size: 1.5rem; margin-bottom: 5px; }
+
+        .type-btn.buy.active {
+            border-color: var(--success);
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .type-btn.sell.active {
+            border-color: var(--warning);
+            background: var(--warning-light);
+            color: #E65100;
+        }
+
+        .type-btn.supplier.active {
+            border-color: var(--success);
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .type-btn.customer.active {
+            border-color: var(--warning);
+            background: var(--warning-light);
+            color: #E65100;
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 5px 20px rgba(33, 150, 243, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #388E3C);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #D32F2F);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #F57C00);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            width: auto;
+        }
+
+        /* Person Cards */
+        .person-card {
+            background: white;
+            border-radius: 15px;
+            padding: 18px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .person-card:hover {
+            transform: translateX(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .person-card::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+        }
+
+        .person-card.supplier::before { background: var(--success); }
+        .person-card.customer::before { background: var(--warning); }
+
+        .person-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .person-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .person-badge {
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .person-badge.supplier {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .person-badge.customer {
+            background: var(--warning-light);
+            color: #E65100;
+        }
+
+        .person-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .person-stat {
+            text-align: center;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 10px;
+        }
+
+        .person-stat .label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+        }
+
+        .person-stat .value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .person-stat .value.positive { color: var(--success); }
+        .person-stat .value.negative { color: var(--danger); }
+
+        .person-actions {
+            display: flex;
+            gap: 8px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .person-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-ledger { background: var(--primary-light); color: var(--primary-dark); }
+        .btn-edit { background: #E3F2FD; color: var(--primary); }
+        .btn-delete { background: var(--danger-light); color: var(--danger); }
+        .btn-pay { background: var(--success-light); color: var(--success); }
+
+        /* Record Cards */
+        .record-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .record-card::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+        }
+
+        .record-card.buy::before { background: var(--success); }
+        .record-card.sell::before { background: var(--warning); }
+        .record-card.payment::before { background: var(--purple); }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .record-type {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .record-type.buy { background: var(--success-light); color: var(--success); }
+        .record-type.sell { background: var(--warning-light); color: #E65100; }
+        .record-type.payment { background: var(--purple-light); color: var(--purple); }
+
+        .record-date { font-size: 0.8rem; color: #999; }
+
+        .record-details p {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .record-details strong { color: var(--text-dark); }
+
+        .record-quantity {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .record-amount {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .record-amount.credit { color: var(--success); }
+        .record-amount.debit { color: var(--danger); }
+
+        .record-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .record-actions button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Ledger Section */
+        .ledger-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ledger-header h2 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .ledger-header .person-type {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .ledger-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .ledger-stat {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .ledger-stat .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .ledger-stat .value {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .ledger-stat.milk .value { color: var(--primary); }
+        .ledger-stat.amount .value { color: var(--success); }
+        .ledger-stat.paid .value { color: var(--purple); }
+        .ledger-stat.balance .value.positive { color: var(--success); }
+        .ledger-stat.balance .value.negative { color: var(--danger); }
+
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-row select,
+        .filter-row input {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* Report Cards */
+        .report-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .report-card h3 {
+            font-size: 1rem;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .report-stat {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-light);
+            border-radius: 10px;
+        }
+
+        .report-stat .label { font-size: 0.75rem; color: var(--text-muted); }
+        .report-stat .value { font-size: 1.1rem; font-weight: bold; color: var(--text-dark); }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.3s;
+            border-radius: 10px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .nav-item span { font-size: 1.4rem; margin-bottom: 2px; }
+        .nav-item small { font-size: 0.7rem; font-weight: 600; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            padding: 15px;
+        }
+
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal { transform: scale(1); }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .modal-header h2 { font-size: 1.2rem; color: var(--text-dark); }
+
+        .modal-close {
+            background: var(--bg-light);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .empty-state span { font-size: 4rem; display: block; margin-bottom: 15px; }
+        .empty-state p { color: #999; font-size: 1rem; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+
+        /* Page Sections */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Back Button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+            color: var(--text-dark);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action {
+            background: white;
+            border: none;
+            padding: 20px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .quick-action:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .quick-action span { font-size: 2rem; display: block; margin-bottom: 8px; }
+        .quick-action p { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+
+        .quick-action.buy { border-top: 4px solid var(--success); }
+        .quick-action.sell { border-top: 4px solid var(--warning); }
+        .quick-action.supplier { border-top: 4px solid var(--success); }
+        .quick-action.customer { border-top: 4px solid var(--warning); }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .form-row { grid-template-columns: 1fr; }
+            .person-stats { grid-template-columns: repeat(2, 1fr); }
+            .ledger-summary { grid-template-columns: 1fr 1fr; }
+            .dashboard { grid-template-columns: repeat(2, 1fr); }
+            .stat-card .value { font-size: 1.3rem; }
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-header h2 {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>🥛 دودھ ریکارڈ کیپر</h1>
+        <p>خرید و فروخت کا مکمل حساب کتاب</p>
+    </header>
+
+    <div class="container">
+        <!-- ======== HOME PAGE ======== -->
+        <div class="page active" id="homePage">
+            <!-- Dashboard Stats -->
+            <div class="dashboard">
+                <div class="stat-card suppliers">
+                    <h3>👨‍🌾 بیچنے والے</h3>
+                    <div class="value" id="totalSuppliers">0</div>
+                    <div class="unit">کھاتے</div>
+                </div>
+                <div class="stat-card customers">
+                    <h3>🛒 خریدنے والے</h3>
+                    <div class="value" id="totalCustomers">0</div>
+                    <div class="unit">کھاتے</div>
+                </div>
+                <div class="stat-card buy">
+                    <h3>📥 کل خریداری</h3>
+                    <div class="value" id="totalBuyLiters">0</div>
+                    <div class="unit">لیٹر</div>
+                </div>
+                <div class="stat-card sell">
+                    <h3>📤 کل فروخت</h3>
+                    <div class="value" id="totalSellLiters">0</div>
+                    <div class="unit">لیٹر</div>
+                </div>
+                <div class="stat-card balance">
+                    <h3>💰 وصولی باقی</h3>
+                    <div class="value" id="totalReceivable">0</div>
+                    <div class="unit">روپے</div>
+                </div>
+                <div class="stat-card total">
+                    <h3>💸 ادائیگی باقی</h3>
+                    <div class="value" id="totalPayable">0</div>
+                    <div class="unit">روپے</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-action buy" onclick="openTransactionModal('buy')">
+                    <span>📥</span>
+                    <p>دودھ خریدیں</p>
+                </button>
+                <button class="quick-action sell" onclick="openTransactionModal('sell')">
+                    <span>📤</span>
+                    <p>دودھ بیچیں</p>
+                </button>
+                <button class="quick-action supplier" onclick="openPersonModal('supplier')">
+                    <span>👨‍🌾</span>
+                    <p>بیچنے والا شامل کریں</p>
+                </button>
+                <button class="quick-action customer" onclick="openPersonModal('customer')">
+                    <span>🛒</span>
+                    <p>خریدنے والا شامل کریں</p>
+                </button>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="section-header">
+                <h2>📋 حالیہ لین دین</h2>
+                <button class="btn btn-sm btn-primary" onclick="showPage('records')">سب دیکھیں</button>
+            </div>
+            <div id="recentTransactions"></div>
+        </div>
+
+        <!-- ======== PEOPLE PAGE ======== -->
+        <div class="page" id="peoplePage">
+            <!-- Tabs for Suppliers/Customers -->
+            <div class="main-tabs">
+                <button class="main-tab active" onclick="filterPeople('all')">سب</button>
+                <button class="main-tab" onclick="filterPeople('supplier')">👨‍🌾 بیچنے والے</button>
+                <button class="main-tab" onclick="filterPeople('customer')">🛒 خریدنے والے</button>
+            </div>
+
+            <!-- Search -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <input type="text" id="searchPeople" placeholder="🔍 نام سے تلاش کریں..." oninput="searchPeople()">
+                    <button class="btn btn-sm btn-success" onclick="openPersonModal()">➕ نیا</button>
+                </div>
+            </div>
+
+            <!-- People List -->
+            <div id="peopleList"></div>
+        </div>
+
+        <!-- ======== RECORDS PAGE ======== -->
+        <div class="page" id="recordsPage">
+            <!-- Filters -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <select id="filterRecordType" onchange="loadRecords()">
+                        <option value="all">سب لین دین</option>
+                        <option value="buy">📥 خریداری</option>
+                        <option value="sell">📤 فروخت</option>
+                        <option value="payment">💵 ادائیگی</option>
+                    </select>
+                    <select id="filterPerson" onchange="loadRecords()">
+                        <option value="all">سب لوگ</option>
+                    </select>
+                    <select id="filterMonth" onchange="loadRecords()">
+                        <option value="all">تمام مہینے</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Records Header -->
+            <div class="section-header">
+                <h2>📋 ریکارڈز</h2>
+                <button class="btn btn-sm btn-primary" onclick="generateAllRecordsPDF()">📄 PDF</button>
+            </div>
+
+            <!-- Records List -->
+            <div id="recordsList"></div>
+        </div>
+
+        <!-- ======== LEDGER PAGE (Individual Account) ======== -->
+        <div class="page" id="ledgerPage">
+            <button class="back-btn" onclick="showPage('people')">
+                ← واپس
+            </button>
+
+            <div class="ledger-header" id="ledgerHeader">
+                <h2 id="ledgerPersonName">-</h2>
+                <p class="person-type" id="ledgerPersonType">-</p>
+            </div>
+
+            <!-- Ledger Summary -->
+            <div class="ledger-summary">
+                <div class="ledger-stat milk">
+                    <div class="label">🥛 کل دودھ</div>
+                    <div class="value" id="ledgerTotalMilk">0 لیٹر</div>
+                </div>
+                <div class="ledger-stat amount">
+                    <div class="label">💰 کل رقم</div>
+                    <div class="value" id="ledgerTotalAmount">0 ₨</div>
+                </div>
+                <div class="ledger-stat paid">
+                    <div class="label">✅ ادا شدہ</div>
+                    <div class="value" id="ledgerPaidAmount">0 ₨</div>
+                </div>
+                <div class="ledger-stat balance">
+                    <div class="label">📊 بیلنس</div>
+                    <div class="value" id="ledgerBalance">0 ₨</div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="quick-actions" id="ledgerActions">
+                <!-- Dynamic based on person type -->
+            </div>
+
+            <!-- Ledger Transactions -->
+            <div class="section-header">
+                <h2>📋 لین دین کی تفصیل</h2>
+                <button class="btn btn-sm btn-primary" onclick="generateLedgerPDF()">📄 PDF</button>
+            </div>
+            <div id="ledgerTransactions"></div>
+        </div>
+
+        <!-- ======== REPORTS PAGE ======== -->
+        <div class="page" id="reportsPage">
+            <div class="report-card">
+                <h3>📊 ماہانہ رپورٹ</h3>
+                <div class="form-group">
+                    <select id="reportMonth" onchange="generateMonthlyReport()">
+                        <option value="">مہینہ منتخب کریں</option>
+                    </select>
+                </div>
+                <div id="monthlyReportContent"></div>
+            </div>
+
+            <div class="report-card">
+                <h3>👨‍🌾 بیچنے والوں کی رپورٹ</h3>
+                <div id="suppliersReportContent"></div>
+                <button class="btn btn-primary" onclick="generateSuppliersReportPDF()" style="margin-top: 15px;">📄 PDF ڈاؤنلوڈ</button>
+            </div>
+
+            <div class="report-card">
+                <h3>🛒 خریدنے والوں کی رپورٹ</h3>
+                <div id="customersReportContent"></div>
+                <button class="btn btn-warning" onclick="generateCustomersReportPDF()" style="margin-top: 15px;">📄 PDF ڈاؤنلوڈ</button>
+            </div>
+
+            <div class="report-card">
+                <h3>📅 تاریخ کے مطابق</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>سے</label>
+                        <input type="date" id="reportDateFrom">
+                    </div>
+                    <div class="form-group">
+                        <label>تک</label>
+                        <input type="date" id="reportDateTo">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="generateDateRangeReport()">رپورٹ بنائیں</button>
+                <div id="dateRangeReportContent" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
+        <!-- ======== SETTINGS PAGE ======== -->
+        <div class="page" id="settingsPage">
+            <div class="form-section">
+                <h3 class="form-title">⚙️ سیٹنگز</h3>
+                
+                <div class="form-group">
+                    <label>💵 ڈیفالٹ قیمت فی لیٹر (خریداری)</label>
+                    <input type="number" id="defaultBuyPrice" placeholder="180" onchange="saveSettings()">
+                </div>
+
+                <div class="form-group">
+                    <label>💵 ڈیفالٹ قیمت فی لیٹر (فروخت)</label>
+                    <input type="number" id="defaultSellPrice" placeholder="200" onchange="saveSettings()">
+                </div>
+
+                <button class="btn btn-success" onclick="exportAllData()" style="margin-top: 20px;">
+                    📤 تمام ڈیٹا ایکسپورٹ
+                </button>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>📥 ڈیٹا امپورٹ</label>
+                    <input type="file" id="importFile" accept=".json" onchange="importAllData(event)">
+                </div>
+
+                <button class="btn btn-danger" onclick="confirmClearAllData()" style="margin-top: 20px;">
+                    🗑️ تمام ڈیٹا صاف کریں
+                </button>
+            </div>
+
+            <div class="form-section">
+                <h3 class="form-title">ℹ️ ایپ کے بارے میں</h3>
+                <p style="color: #666; font-size: 0.9rem; line-height: 1.8;">
+                    یہ ایپ گھریلو دودھ کی خرید و فروخت کا ریکارڈ رکھنے کے لیے ہے۔ 
+                    ہر بیچنے والے اور خریدنے والے کا الگ کھاتا رکھیں۔
+                </p>
+                <p style="color: #999; font-size: 0.8rem; margin-top: 10px;">
+                    ورژن 2.0.0
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="showPage('home')">
+            <span>🏠</span>
+            <small>ہوم</small>
+        </button>
+        <button class="nav-item" onclick="showPage('people')">
+            <span>👥</span>
+            <small>کھاتے</small>
+        </button>
+        <button class="nav-item" onclick="showPage('records')">
+            <span>📋</span>
+            <small>ریکارڈز</small>
+        </button>
+        <button class="nav-item" onclick="showPage('reports')">
+            <span>📊</span>
+            <small>رپورٹس</small>
+        </button>
+        <button class="nav-item" onclick="showPage('settings')">
+            <span>⚙️</span>
+            <small>سیٹنگز</small>
+        </button>
+    </nav>
+
+    <!-- ======== MODALS ======== -->
+
+    <!-- Add/Edit Person Modal -->
+    <div class="modal-overlay" id="personModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="personModalTitle">➕ نیا کھاتا</h2>
+                <button class="modal-close" onclick="closeModal('personModal')">&times;</button>
+            </div>
+            <form id="personForm">
+                <input type="hidden" id="personId">
+                
+                <div class="type-selector">
+                    <button type="button" class="type-btn supplier active" onclick="selectPersonType('supplier')">
+                        <span>👨‍🌾</span>
+                        بیچنے والا
+                    </button>
+                    <button type="button" class="type-btn customer" onclick="selectPersonType('customer')">
+                        <span>🛒</span>
+                        خریدنے والا
+                    </button>
+                </div>
+                <input type="hidden" id="personType" value="supplier">
+
+                <div class="form-group">
+                    <label>👤 نام</label>
+                    <input type="text" id="personName" placeholder="نام درج کریں" required>
+                </div>
+
+                <div class="form-group">
+                    <label>📱 فون نمبر (اختیاری)</label>
+                    <input type="tel" id="personPhone" placeholder="03XX-XXXXXXX">
+                </div>
+
+                <div class="form-group">
+                    <label>📍 پتہ (اختیاری)</label>
+                    <input type="text" id="personAddress" placeholder="پتہ">
+                </div>
+
+                <div class="form-group">
+                    <label>📝 نوٹس (اختیاری)</label>
+                    <textarea id="personNotes" rows="2" placeholder="کوئی اضافی معلومات..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">✅ محفوظ کریں</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div class="modal-overlay" id="transactionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="transactionModalTitle">📥 دودھ خریدیں</h2>
+                <button class="modal-close" onclick="closeModal('transactionModal')">&times;</button>
+            </div>
+            <form id="transactionForm">
+                <input type="hidden" id="transactionId">
+                <input type="hidden" id="transactionType" value="buy">
+
+                <div class="form-group">
+                    <label id="transactionPersonLabel">👨‍🌾 بیچنے والا منتخب کریں</label>
+                    <select id="transactionPerson" required>
+                        <option value="">منتخب کریں...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📅 تاریخ</label>
+                    <input type="date" id="transactionDate" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🥛 مقدار (لیٹر)</label>
+                        <input type="number" id="transactionQuantity" step="0.5" min="0.5" placeholder="0.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>💵 قیمت فی لیٹر</label>
+                        <input type="number" id="transactionPrice" step="1" min="0" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>💰 کل رقم</label>
+                    <input type="number" id="transactionTotal" readonly style="background: #f5f5f5; font-weight: bold;">
+                </div>
+
+                <div class="form-group">
+                    <label>✅ ادا کی گئی رقم</label>
+                    <input type="number" id="transactionPaid" step="1" min="0" placeholder="0" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label>📝 نوٹس (اختیاری)</label>
+                    <textarea id="transactionNotes" rows="2" placeholder="کوئی اضافی معلومات..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success">✅ محفوظ کریں</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>💵 ادائیگی</h2>
+                <button class="modal-close" onclick="closeModal('paymentModal')">&times;</button>
+            </div>
+            <form id="paymentForm">
+                <input type="hidden" id="paymentPersonId">
+                
+                <div class="ledger-stat balance" style="margin-bottom: 20px;">
+                    <div class="label">موجودہ بیلنس</div>
+                    <div class="value" id="paymentCurrentBalance">0 ₨</div>
+                </div>
+
+                <div class="form-group">
+                    <label>📅 تاریخ</label>
+                    <input type="date" id="paymentDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>💵 رقم</label>
+                    <input type="number" id="paymentAmount" step="1" min="1" placeholder="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 نوٹس (اختیاری)</label>
+                    <textarea id="paymentNotes" rows="2" placeholder="ادائیگی کی تفصیل..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success">✅ ادائیگی محفوظ کریں</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>⚠️ تصدیق</h2>
+                <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+            </div>
+            <p id="deleteMessage" style="margin-bottom: 20px; color: #666;">کیا آپ واقعی حذف کرنا چاہتے ہیں؟</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-danger" id="confirmDeleteBtn">ہاں، حذف کریں</button>
+                <button class="btn" style="background: #eee; color: #333;" onclick="closeModal('deleteModal')">نہیں</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ==================== DATABASE SETUP ====================
+        let db;
+        const DB_NAME = 'MilkRecordDB_v2';
+        const DB_VERSION = 1;
+
+        const STORES = {
+            PEOPLE: 'people',
+            TRANSACTIONS: 'transactions'
+        };
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => { db = request.result; resolve(db); };
+                
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    
+                    // People Store (بیچنے والے اور خریدنے والے)
+                    if (!database.objectStoreNames.contains(STORES.PEOPLE)) {
+                        const peopleStore = database.createObjectStore(STORES.PEOPLE, { keyPath: 'id', autoIncrement: true });
+                        peopleStore.createIndex('type', 'type', { unique: false });
+                        peopleStore.createIndex('name', 'name', { unique: false });
+                    }
+                    
+                    // Transactions Store (لین دین)
+                    if (!database.objectStoreNames.contains(STORES.TRANSACTIONS)) {
+                        const transStore = database.createObjectStore(STORES.TRANSACTIONS, { keyPath: 'id', autoIncrement: true });
+                        transStore.createIndex('type', 'type', { unique: false });
+                        transStore.createIndex('personId', 'personId', { unique: false });
+                        transStore.createIndex('date', 'date', { unique: false });
+                    }
+                };
+            });
+        }
+
+        // ==================== CRUD OPERATIONS ====================
+        async function addItem(storeName, item) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                item.createdAt = new Date().toISOString();
+                const request = store.add(item);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function updateItem(storeName, item) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                item.updatedAt = new Date().toISOString();
+                const request = store.put(item);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function deleteItem(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getAll(storeName) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getById(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(id);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // ==================== UI FUNCTIONS ====================
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(`${page}Page`).classList.add('active');
+            const navIndex = ['home', 'people', 'records', 'reports', 'settings'].indexOf(page);
+            if (navIndex >= 0) {
+                document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
+            }
+            
+            // Load page specific data
+            switch(page) {
+                case 'home': loadDashboard(); break;
+                case 'people': loadPeople(); break;
+                case 'records': loadRecords(); break;
+                case 'reports': loadReports(); break;
+                case 'settings': loadSettings(); break;
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('ur-PK', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString('ur-PK');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // ==================== DASHBOARD ====================
+        async function loadDashboard() {
+            const people = await getAll(STORES.PEOPLE);
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            
+            const suppliers = people.filter(p => p.type === 'supplier');
+            const customers = people.filter(p => p.type === 'customer');
+            
+            document.getElementById('totalSuppliers').textContent = suppliers.length;
+            document.getElementById('totalCustomers').textContent = customers.length;
+            
+            // Calculate totals
+            let totalBuyLiters = 0, totalSellLiters = 0;
+            let totalPayable = 0, totalReceivable = 0;
+            
+            // Calculate for each person
+            for (const person of people) {
+                const personTrans = transactions.filter(t => t.personId === person.id);
+                const balance = calculatePersonBalance(person, personTrans);
+                
+                if (person.type === 'supplier') {
+                    totalBuyLiters += personTrans.filter(t => t.type === 'buy').reduce((sum, t) => sum + t.quantity, 0);
+                    if (balance < 0) totalPayable += Math.abs(balance);
+                } else {
+                    totalSellLiters += personTrans.filter(t => t.type === 'sell').reduce((sum, t) => sum + t.quantity, 0);
+                    if (balance > 0) totalReceivable += balance;
+                }
+            }
+            
+            document.getElementById('totalBuyLiters').textContent = totalBuyLiters.toFixed(1);
+            document.getElementById('totalSellLiters').textContent = totalSellLiters.toFixed(1);
+            document.getElementById('totalReceivable').textContent = formatNumber(totalReceivable);
+            document.getElementById('totalPayable').textContent = formatNumber(totalPayable);
+            
+            // Recent transactions
+            loadRecentTransactions(transactions, people);
+        }
+
+        async function loadRecentTransactions(transactions, people) {
+            const recent = transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+            const container = document.getElementById('recentTransactions');
+            
+            if (recent.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>📭</span><p>کوئی لین دین نہیں</p></div>';
+                return;
+            }
+            
+            container.innerHTML = recent.map(t => {
+                const person = people.find(p => p.id === t.personId);
+                return createTransactionCard(t, person);
+            }).join('');
+        }
+
+        function createTransactionCard(t, person, showActions = false) {
+            const typeLabels = {
+                buy: '📥 خریداری',
+                sell: '📤 فروخت',
+                payment: '💵 ادائیگی'
+            };
+            
+            let details = '';
+            if (t.type === 'payment') {
+                details = `<p class="record-amount ${t.paymentType === 'received' ? 'credit' : 'debit'}">${formatNumber(t.amount)} روپے</p>`;
+            } else {
+                details = `
+                    <p><strong>${person?.name || 'نامعلوم'}</strong></p>
+                    <p class="record-quantity">${t.quantity} لیٹر</p>
+                    ${t.pricePerLiter ? `<p>💵 ${t.pricePerLiter} × ${t.quantity} = <strong>${formatNumber(t.totalAmount)} روپے</strong></p>` : ''}
+                    ${t.paidAmount > 0 ? `<p>✅ ادا شدہ: ${formatNumber(t.paidAmount)} روپے</p>` : ''}
+                `;
+            }
+            
+            return `
+                <div class="record-card ${t.type}">
+                    <div class="record-header">
+                        <span class="record-type ${t.type}">${typeLabels[t.type]}</span>
+                        <span class="record-date">${formatDate(t.date)}</span>
+                    </div>
+                    <div class="record-details">
+                        ${details}
+                        ${t.notes ? `<p style="color: #999; font-size: 0.85rem;">📝 ${t.notes}</p>` : ''}
+                    </div>
+                    ${showActions ? `
+                        <div class="record-actions">
+                            <button class="btn-edit" onclick="editTransaction(${t.id})">✏️ ترمیم</button>
+                            <button class="btn-delete" onclick="confirmDeleteTransaction(${t.id})">🗑️ حذف</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // ==================== PEOPLE MANAGEMENT ====================
+        let currentPeopleFilter = 'all';
+
+        async function loadPeople() {
+            const people = await getAll(STORES.PEOPLE);
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            
+            let filtered = people;
+            if (currentPeopleFilter !== 'all') {
+                filtered = people.filter(p => p.type === currentPeopleFilter);
+            }
+            
+            const searchTerm = document.getElementById('searchPeople')?.value?.toLowerCase() || '';
+            if (searchTerm) {
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm));
+            }
+            
+            const container = document.getElementById('peopleList');
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>👥</span><p>کوئی کھاتا نہیں ملا</p></div>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(person => {
+                const personTrans = transactions.filter(t => t.personId === person.id);
+                const stats = calculatePersonStats(person, personTrans);
+                return createPersonCard(person, stats);
+            }).join('');
+            
+            // Update filter dropdowns
+            updatePersonFilters(people);
+        }
+
+        function calculatePersonStats(person, transactions) {
+            let totalMilk = 0, totalAmount = 0, paidAmount = 0;
+            
+            transactions.forEach(t => {
+                if (t.type === 'buy' || t.type === 'sell') {
+                    totalMilk += t.quantity;
+                    totalAmount += t.totalAmount || 0;
+                    paidAmount += t.paidAmount || 0;
+                } else if (t.type === 'payment') {
+                    paidAmount += t.amount || 0;
+                }
+            });
+            
+            const balance = totalAmount - paidAmount;
+            
+            return { totalMilk, totalAmount, paidAmount, balance };
+        }
+
+        function calculatePersonBalance(person, transactions) {
+            const stats = calculatePersonStats(person, transactions);
+            // For supplier: negative balance means we owe them
+            // For customer: positive balance means they owe us
+            if (person.type === 'supplier') {
+                return -stats.balance; // Negative if we owe
+            }
+            return stats.balance; // Positive if they owe
+        }
+
+        function createPersonCard(person, stats) {
+            const isSupplier = person.type === 'supplier';
+            const balanceClass = stats.balance > 0 ? 'negative' : (stats.balance < 0 ? 'positive' : '');
+            const balanceLabel = isSupplier ? 
+                (stats.balance > 0 ? 'ادائیگی باقی' : 'کلیئر') :
+                (stats.balance > 0 ? 'وصولی باقی' : 'کلیئر');
+            
+            return `
+                <div class="person-card ${person.type}">
+                    <div class="person-header">
+                        <div class="person-name">
+                            ${isSupplier ? '👨‍🌾' : '🛒'} ${person.name}
+                        </div>
+                        <span class="person-badge ${person.type}">
+                            ${isSupplier ? 'بیچنے والا' : 'خریدنے والا'}
+                        </span>
+                    </div>
+                    
+                    <div class="person-stats">
+                        <div class="person-stat">
+                            <div class="label">🥛 دودھ</div>
+                            <div class="value">${stats.totalMilk.toFixed(1)} لیٹر</div>
+                        </div>
+                        <div class="person-stat">
+                            <div class="label">💰 کل رقم</div>
+                            <div class="value">${formatNumber(stats.totalAmount)} ₨</div>
+                        </div>
+                        <div class="person-stat">
+                            <div class="label">📊 ${balanceLabel}</div>
+                            <div class="value ${balanceClass}">${formatNumber(Math.abs(stats.balance))} ₨</div>
+                        </div>
+                    </div>
+                    
+                    <div class="person-actions">
+                        <button class="btn-ledger" onclick="openLedger(${person.id})">📋 کھاتا</button>
+                        <button class="btn-pay" onclick="openPaymentModal(${person.id})">${isSupplier ? '💸 ادائیگی' : '💵 وصولی'}</button>
+                        <button class="btn-edit" onclick="editPerson(${person.id})">✏️</button>
+                        <button class="btn-delete" onclick="confirmDeletePerson(${person.id})">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function filterPeople(type) {
+            currentPeopleFilter = type;
+            document.querySelectorAll('.main-tabs .main-tab').forEach((tab, index) => {
+                tab.classList.toggle('active', 
+                    (type === 'all' && index === 0) ||
+                    (type === 'supplier' && index === 1) ||
+                    (type === 'customer' && index === 2)
+                );
+            });
+            loadPeople();
+        }
+
+        function searchPeople() {
+            loadPeople();
+        }
+
+        function openPersonModal(type = null) {
+            document.getElementById('personForm').reset();
+            document.getElementById('personId').value = '';
+            document.getElementById('personModalTitle').textContent = '➕ نیا کھاتا';
+            
+            if (type) {
+                selectPersonType(type);
+            } else {
+                selectPersonType('supplier');
+            }
+            
+            openModal('personModal');
+        }
+
+        function selectPersonType(type) {
+            document.getElementById('personType').value = type;
+            document.querySelectorAll('#personModal .type-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.classList.contains(type)) btn.classList.add('active');
+            });
+        }
+
+        async function editPerson(id) {
+            const person = await getById(STORES.PEOPLE, id);
+            if (!person) return;
+            
+            document.getElementById('personId').value = person.id;
+            document.getElementById('personName').value = person.name;
+            document.getElementById('personPhone').value = person.phone || '';
+            document.getElementById('personAddress').value = person.address || '';
+            document.getElementById('personNotes').value = person.notes || '';
+            document.getElementById('personModalTitle').textContent = '✏️ کھاتے میں ترمیم';
+            
+            selectPersonType(person.type);
+            openModal('personModal');
+        }
+
+        document.getElementById('personForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const personId = document.getElementById('personId').value;
+            const person = {
+                type: document.getElementById('personType').value,
+                name: document.getElementById('personName').value,
+                phone: document.getElementById('personPhone').value,
+                address: document.getElementById('personAddress').value,
+                notes: document.getElementById('personNotes').value
+            };
+            
+            try {
+                if (personId) {
+                    person.id = parseInt(personId);
+                    await updateItem(STORES.PEOPLE, person);
+                    showToast('✅ کھاتا اپڈیٹ ہو گیا');
+                } else {
+                    await addItem(STORES.PEOPLE, person);
+                    showToast('✅ نیا کھاتا بن گیا');
+                }
+                
+                closeModal('personModal');
+                loadPeople();
+                loadDashboard();
+            } catch (error) {
+                showToast('❌ کچھ غلطی ہو گئی', 'error');
+            }
+        });
+
+        function confirmDeletePerson(id) {
+            document.getElementById('deleteMessage').textContent = 'کیا آپ واقعی یہ کھاتا حذف کرنا چاہتے ہیں؟ اس کے تمام ریکارڈز بھی حذف ہو جائیں گے۔';
+            document.getElementById('confirmDeleteBtn').onclick = async () => {
+                // Delete all transactions for this person
+                const transactions = await getAll(STORES.TRANSACTIONS);
+                const personTrans = transactions.filter(t => t.personId === id);
+                for (const t of personTrans) {
+                    await deleteItem(STORES.TRANSACTIONS, t.id);
+                }
+                
+                await deleteItem(STORES.PEOPLE, id);
+                closeModal('deleteModal');
+                loadPeople();
+                loadDashboard();
+                showToast('✅ کھاتا حذف ہو گیا');
+            };
+            openModal('deleteModal');
+        }
+
+        // ==================== TRANSACTIONS ====================
+        async function openTransactionModal(type) {
+            document.getElementById('transactionForm').reset();
+            document.getElementById('transactionId').value = '';
+            document.getElementById('transactionType').value = type;
+            document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('transactionTotal').value = '';
+            document.getElementById('transactionPaid').value = '0';
+            
+            const people = await getAll(STORES.PEOPLE);
+            const targetType = type === 'buy' ? 'supplier' : 'customer';
+            const filtered = people.filter(p => p.type === targetType);
+            
+            const select = document.getElementById('transactionPerson');
+            select.innerHTML = '<option value="">منتخب کریں...</option>' +
+                filtered.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            
+            if (type === 'buy') {
+                document.getElementById('transactionModalTitle').textContent = '📥 دودھ خریدیں';
+                document.getElementById('transactionPersonLabel').textContent = '👨‍🌾 بیچنے والا منتخب کریں';
+                document.getElementById('transactionPrice').value = localStorage.getItem('defaultBuyPrice') || '';
+            } else {
+                document.getElementById('transactionModalTitle').textContent = '📤 دودھ بیچیں';
+                document.getElementById('transactionPersonLabel').textContent = '🛒 خریدنے والا منتخب کریں';
+                document.getElementById('transactionPrice').value = localStorage.getItem('defaultSellPrice') || '';
+            }
+            
+            openModal('transactionModal');
+        }
+
+        // Calculate total on quantity/price change
+        document.getElementById('transactionQuantity').addEventListener('input', calculateTotal);
+        document.getElementById('transactionPrice').addEventListener('input', calculateTotal);
+
+        function calculateTotal() {
+            const qty = parseFloat(document.getElementById('transactionQuantity').value) || 0;
+            const price = parseFloat(document.getElementById('transactionPrice').value) || 0;
+            document.getElementById('transactionTotal').value = (qty * price).toFixed(0);
+        }
+
+        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const transactionId = document.getElementById('transactionId').value;
+            const transaction = {
+                type: document.getElementById('transactionType').value,
+                personId: parseInt(document.getElementById('transactionPerson').value),
+                date: document.getElementById('transactionDate').value,
+                quantity: parseFloat(document.getElementById('transactionQuantity').value),
+                pricePerLiter: parseFloat(document.getElementById('transactionPrice').value) || 0,
+                totalAmount: parseFloat(document.getElementById('transactionTotal').value) || 0,
+                paidAmount: parseFloat(document.getElementById('transactionPaid').value) || 0,
+                notes: document.getElementById('transactionNotes').value
+            };
+            
+            try {
+                if (transactionId) {
+                    transaction.id = parseInt(transactionId);
+                    await updateItem(STORES.TRANSACTIONS, transaction);
+                    showToast('✅ ریکارڈ اپڈیٹ ہو گیا');
+                } else {
+                    await addItem(STORES.TRANSACTIONS, transaction);
+                    showToast('✅ ریکارڈ محفوظ ہو گیا');
+                }
+                
+                closeModal('transactionModal');
+                loadDashboard();
+                if (document.getElementById('recordsPage').classList.contains('active')) {
+                    loadRecords();
+                }
+                if (document.getElementById('ledgerPage').classList.contains('active')) {
+                    loadLedger(currentLedgerPersonId);
+                }
+            } catch (error) {
+                showToast('❌ کچھ غلطی ہو گئی', 'error');
+            }
+        });
+
+        async function editTransaction(id) {
+            const transaction = await getById(STORES.TRANSACTIONS, id);
+            if (!transaction) return;
+            
+            await openTransactionModal(transaction.type);
+            
+            document.getElementById('transactionId').value = transaction.id;
+            document.getElementById('transactionPerson').value = transaction.personId;
+            document.getElementById('transactionDate').value = transaction.date;
+            document.getElementById('transactionQuantity').value = transaction.quantity;
+            document.getElementById('transactionPrice').value = transaction.pricePerLiter || '';
+            document.getElementById('transactionTotal').value = transaction.totalAmount || '';
+            document.getElementById('transactionPaid').value = transaction.paidAmount || 0;
+            document.getElementById('transactionNotes').value = transaction.notes || '';
+        }
+
+        function confirmDeleteTransaction(id) {
+            document.getElementById('deleteMessage').textContent = 'کیا آپ واقعی یہ ریکارڈ حذف کرنا چاہتے ہیں؟';
+            document.getElementById('confirmDeleteBtn').onclick = async () => {
+                await deleteItem(STORES.TRANSACTIONS, id);
+                closeModal('deleteModal');
+                loadRecords();
+                loadDashboard();
+                showToast('✅ ریکارڈ حذف ہو گیا');
+            };
+            openModal('deleteModal');
+        }
+
+        // ==================== PAYMENTS ====================
+        async function openPaymentModal(personId) {
+            const person = await getById(STORES.PEOPLE, personId);
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const personTrans = transactions.filter(t => t.personId === personId);
+            const balance = calculatePersonBalance(person, personTrans);
+            
+            document.getElementById('paymentForm').reset();
+            document.getElementById('paymentPersonId').value = personId;
+            document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('paymentCurrentBalance').textContent = `${formatNumber(Math.abs(balance))} ₨`;
+            document.getElementById('paymentCurrentBalance').className = `value ${balance >= 0 ? 'positive' : 'negative'}`;
+            
+            openModal('paymentModal');
+        }
+
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const personId = parseInt(document.getElementById('paymentPersonId').value);
+            const person = await getById(STORES.PEOPLE, personId);
+            
+            const payment = {
+                type: 'payment',
+                personId: personId,
+                date: document.getElementById('paymentDate').value,
+                amount: parseFloat(document.getElementById('paymentAmount').value),
+                paymentType: person.type === 'supplier' ? 'paid' : 'received',
+                notes: document.getElementById('paymentNotes').value
+            };
+            
+            try {
+                await addItem(STORES.TRANSACTIONS, payment);
+                showToast('✅ ادائیگی محفوظ ہو گئی');
+                closeModal('paymentModal');
+                loadDashboard();
+                loadPeople();
+                if (document.getElementById('ledgerPage').classList.contains('active')) {
+                    loadLedger(personId);
+                }
+            } catch (error) {
+                showToast('❌ کچھ غلطی ہو گئی', 'error');
+            }
+        });
+
+        // ==================== LEDGER (Individual Account) ====================
+        let currentLedgerPersonId = null;
+
+        async function openLedger(personId) {
+            currentLedgerPersonId = personId;
+            showPage('ledger');
+            loadLedger(personId);
+        }
+
+        async function loadLedger(personId) {
+            const person = await getById(STORES.PEOPLE, personId);
+            if (!person) return;
+            
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const personTrans = transactions.filter(t => t.personId === personId).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const stats = calculatePersonStats(person, personTrans);
+            
+            // Header
+            document.getElementById('ledgerPersonName').textContent = person.name;
+            document.getElementById('ledgerPersonType').textContent = person.type === 'supplier' ? '👨‍🌾 بیچنے والا' : '🛒 خریدنے والا';
+            
+            // Stats
+            document.getElementById('ledgerTotalMilk').textContent = `${stats.totalMilk.toFixed(1)} لیٹر`;
+            document.getElementById('ledgerTotalAmount').textContent = `${formatNumber(stats.totalAmount)} ₨`;
+            document.getElementById('ledgerPaidAmount').textContent = `${formatNumber(stats.paidAmount)} ₨`;
+            
+            const balanceEl = document.getElementById('ledgerBalance');
+            balanceEl.textContent = `${formatNumber(Math.abs(stats.balance))} ₨`;
+            balanceEl.className = `value ${stats.balance > 0 ? 'negative' : 'positive'}`;
+            
+            // Actions
+            const actionsHtml = person.type === 'supplier' ? `
+                <button class="quick-action buy" onclick="openTransactionModalForPerson(${personId}, 'buy')">
+                    <span>📥</span>
+                    <p>دودھ خریدیں</p>
+                </button>
+                <button class="quick-action" style="border-top: 4px solid var(--purple);" onclick="openPaymentModal(${personId})">
+                    <span>💸</span>
+                    <p>ادائیگی کریں</p>
+                </button>
+            ` : `
+                <button class="quick-action sell" onclick="openTransactionModalForPerson(${personId}, 'sell')">
+                    <span>📤</span>
+                    <p>دودھ بیچیں</p>
+                </button>
+                <button class="quick-action" style="border-top: 4px solid var(--purple);" onclick="openPaymentModal(${personId})">
+                    <span>💵</span>
+                    <p>وصولی کریں</p>
+                </button>
+            `;
+            document.getElementById('ledgerActions').innerHTML = actionsHtml;
+            
+            // Transactions
+            const container = document.getElementById('ledgerTransactions');
+            if (personTrans.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>📭</span><p>کوئی لین دین نہیں</p></div>';
+                return;
+            }
+            
+            container.innerHTML = personTrans.map(t => createTransactionCard(t, person, true)).join('');
+        }
+
+        async function openTransactionModalForPerson(personId, type) {
+            await openTransactionModal(type);
+            document.getElementById('transactionPerson').value = personId;
+        }
+
+        function generateLedgerPDF() {
+            // Implementation similar to other PDF functions
+            showToast('📄 PDF بن رہی ہے...');
+            // ... PDF generation code
+        }
+
+        // ==================== RECORDS PAGE ====================
+        async function loadRecords() {
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const people = await getAll(STORES.PEOPLE);
+            
+            // Apply filters
+            const filterType = document.getElementById('filterRecordType').value;
+            const filterPerson = document.getElementById('filterPerson').value;
+            const filterMonth = document.getElementById('filterMonth').value;
+            
+            let filtered = transactions;
+            
+            if (filterType !== 'all') {
+                filtered = filtered.filter(t => t.type === filterType);
+            }
+            
+            if (filterPerson !== 'all') {
+                filtered = filtered.filter(t => t.personId === parseInt(filterPerson));
+            }
+            
+            if (filterMonth !== 'all') {
+                filtered = filtered.filter(t => t.date?.substring(0, 7) === filterMonth);
+            }
+            
+            // Sort by date
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const container = document.getElementById('recordsList');
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span>📭</span><p>کوئی ریکارڈ نہیں ملا</p></div>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(t => {
+                const person = people.find(p => p.id === t.personId);
+                return createTransactionCard(t, person, true);
+            }).join('');
+            
+            // Update filters
+            updatePersonFilters(people);
+            updateMonthFilters(transactions);
+        }
+
+        function updatePersonFilters(people) {
+            const select = document.getElementById('filterPerson');
+            const currentValue = select?.value;
+            if (select) {
+                select.innerHTML = '<option value="all">سب لوگ</option>' +
+                    people.map(p => `<option value="${p.id}">${p.type === 'supplier' ? '👨‍🌾' : '🛒'} ${p.name}</option>`).join('');
+                if (currentValue) select.value = currentValue;
+            }
+        }
+
+        function updateMonthFilters(transactions) {
+            const months = [...new Set(transactions.map(t => t.date?.substring(0, 7)).filter(Boolean))].sort().reverse();
+            const monthNames = ['جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون', 'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'];
+            
+            const selects = [document.getElementById('filterMonth'), document.getElementById('reportMonth')];
+            
+            selects.forEach(select => {
+                if (!select) return;
+                const currentValue = select.value;
+                select.innerHTML = '<option value="all">تمام مہینے</option>' +
+                    months.map(m => {
+                        const [year, month] = m.split('-');
+                        return `<option value="${m}">${monthNames[parseInt(month) - 1]} ${year}</option>`;
+                    }).join('');
+                if (currentValue && currentValue !== 'all') select.value = currentValue;
+            });
+        }
+
+        // ==================== REPORTS ====================
+        async function loadReports() {
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const people = await getAll(STORES.PEOPLE);
+            
+            updateMonthFilters(transactions);
+            
+            // Suppliers Report
+            const suppliers = people.filter(p => p.type === 'supplier');
+            let suppliersHtml = '<div class="report-stats">';
+            let totalSupplierMilk = 0, totalSupplierAmount = 0, totalSupplierBalance = 0;
+            
+            suppliers.forEach(s => {
+                const trans = transactions.filter(t => t.personId === s.id);
+                const stats = calculatePersonStats(s, trans);
+                totalSupplierMilk += stats.totalMilk;
+                totalSupplierAmount += stats.totalAmount;
+                totalSupplierBalance += stats.balance;
+            });
+            
+            suppliersHtml += `
+                <div class="report-stat"><div class="label">کل بیچنے والے</div><div class="value">${suppliers.length}</div></div>
+                <div class="report-stat"><div class="label">کل دودھ خریدا</div><div class="value">${totalSupplierMilk.toFixed(1)} لیٹر</div></div>
+                <div class="report-stat"><div class="label">کل رقم</div><div class="value">${formatNumber(totalSupplierAmount)} ₨</div></div>
+                <div class="report-stat"><div class="label">ادائیگی باقی</div><div class="value">${formatNumber(totalSupplierBalance)} ₨</div></div>
+            </div>`;
+            document.getElementById('suppliersReportContent').innerHTML = suppliersHtml;
+            
+            // Customers Report
+            const customers = people.filter(p => p.type === 'customer');
+            let customersHtml = '<div class="report-stats">';
+            let totalCustomerMilk = 0, totalCustomerAmount = 0, totalCustomerBalance = 0;
+            
+            customers.forEach(c => {
+                const trans = transactions.filter(t => t.personId === c.id);
+                const stats = calculatePersonStats(c, trans);
+                totalCustomerMilk += stats.totalMilk;
+                totalCustomerAmount += stats.totalAmount;
+                totalCustomerBalance += stats.balance;
+            });
+            
+            customersHtml += `
+                <div class="report-stat"><div class="label">کل خریدنے والے</div><div class="value">${customers.length}</div></div>
+                <div class="report-stat"><div class="label">کل دودھ بیچا</div><div class="value">${totalCustomerMilk.toFixed(1)} لیٹر</div></div>
+                <div class="report-stat"><div class="label">کل رقم</div><div class="value">${formatNumber(totalCustomerAmount)} ₨</div></div>
+                <div class="report-stat"><div class="label">وصولی باقی</div><div class="value">${formatNumber(totalCustomerBalance)} ₨</div></div>
+            </div>`;
+            document.getElementById('customersReportContent').innerHTML = customersHtml;
+        }
+
+        async function generateMonthlyReport() {
+            const month = document.getElementById('reportMonth').value;
+            if (!month || month === 'all') {
+                document.getElementById('monthlyReportContent').innerHTML = '';
+                return;
+            }
+            
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const monthTrans = transactions.filter(t => t.date?.substring(0, 7) === month);
+            
+            const buyTrans = monthTrans.filter(t => t.type === 'buy');
+            const sellTrans = monthTrans.filter(t => t.type === 'sell');
+            
+            const totalBuy = buyTrans.reduce((sum, t) => sum + t.quantity, 0);
+            const totalSell = sellTrans.reduce((sum, t) => sum + t.quantity, 0);
+            const totalBuyAmount = buyTrans.reduce((sum, t) => sum + (t.totalAmount || 0), 0);
+            const totalSellAmount = sellTrans.reduce((sum, t) => sum + (t.totalAmount || 0), 0);
+            
+            document.getElementById('monthlyReportContent').innerHTML = `
+                <div class="report-stats">
+                    <div class="report-stat"><div class="label">📥 خریداری</div><div class="value">${totalBuy.toFixed(1)} لیٹر</div></div>
+                    <div class="report-stat"><div class="label">📤 فروخت</div><div class="value">${totalSell.toFixed(1)} لیٹر</div></div>
+                    <div class="report-stat"><div class="label">💰 خریداری رقم</div><div class="value">${formatNumber(totalBuyAmount)} ₨</div></div>
+                    <div class="report-stat"><div class="label">💵 فروخت رقم</div><div class="value">${formatNumber(totalSellAmount)} ₨</div></div>
+                </div>
+                <button class="btn btn-primary" onclick="generateMonthlyPDF('${month}')" style="margin-top: 15px;">📄 PDF ڈاؤنلوڈ</button>
+            `;
+        }
+
+        async function generateDateRangeReport() {
+            const from = document.getElementById('reportDateFrom').value;
+            const to = document.getElementById('reportDateTo').value;
+            
+            if (!from || !to) {
+                showToast('براہ کرم تاریخیں منتخب کریں', 'error');
+                return;
+            }
+            
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const rangeTrans = transactions.filter(t => t.date >= from && t.date <= to);
+            
+            const buyTrans = rangeTrans.filter(t => t.type === 'buy');
+            const sellTrans = rangeTrans.filter(t => t.type === 'sell');
+            
+            const totalBuy = buyTrans.reduce((sum, t) => sum + t.quantity, 0);
+            const totalSell = sellTrans.reduce((sum, t) => sum + t.quantity, 0);
+            const totalBuyAmount = buyTrans.reduce((sum, t) => sum + (t.totalAmount || 0), 0);
+            const totalSellAmount = sellTrans.reduce((sum, t) => sum + (t.totalAmount || 0), 0);
+            
+            document.getElementById('dateRangeReportContent').innerHTML = `
+                <div class="report-stats">
+                    <div class="report-stat"><div class="label">📥 خریداری</div><div class="value">${totalBuy.toFixed(1)} لیٹر</div></div>
+                    <div class="report-stat"><div class="label">📤 فروخت</div><div class="value">${totalSell.toFixed(1)} لیٹر</div></div>
+                    <div class="report-stat"><div class="label">💰 خریداری رقم</div><div class="value">${formatNumber(totalBuyAmount)} ₨</div></div>
+                    <div class="report-stat"><div class="label">💵 فروخت رقم</div><div class="value">${formatNumber(totalSellAmount)} ₨</div></div>
+                </div>
+                <button class="btn btn-primary" onclick="generateDateRangePDF('${from}', '${to}')" style="margin-top: 15px;">📄 PDF ڈاؤنلوڈ</button>
+            `;
+        }
+
+        // ==================== PDF GENERATION ====================
+        async function generateAllRecordsPDF() {
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const people = await getAll(STORES.PEOPLE);
+            
+            if (transactions.length === 0) {
+                showToast('کوئی ریکارڈ نہیں', 'error');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text('Milk Records - Doodh Ka Hisaab', 105, 15, { align: 'center' });
+            
+            const tableData = transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).map(t => {
+                const person = people.find(p => p.id === t.personId);
+                if (t.type === 'payment') {
+                    return [t.date, 'Payment', person?.name || '-', '-', '-', `Rs.${t.amount}`];
+                }
+                return [
+                    t.date,
+                    t.type === 'buy' ? 'Buy' : 'Sell',
+                    person?.name || '-',
+                    `${t.quantity} L`,
+                    t.pricePerLiter ? `Rs.${t.pricePerLiter}` : '-',
+                    t.totalAmount ? `Rs.${t.totalAmount}` : '-'
+                ];
+            });
+            
+            doc.autoTable({
+                head: [['Date', 'Type', 'Person', 'Qty', 'Rate', 'Total']],
+                body: tableData,
+                startY: 25,
+                styles: { fontSize: 8 }
+            });
+            
+            doc.save('milk-records-all.pdf');
+            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
+        }
+
+        async function generateSuppliersReportPDF() {
+            const people = await getAll(STORES.PEOPLE);
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const suppliers = people.filter(p => p.type === 'supplier');
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text('Suppliers Report - Bechnay Walon Ka Hisaab', 105, 15, { align: 'center' });
+            
+            const tableData = suppliers.map(s => {
+                const trans = transactions.filter(t => t.personId === s.id);
+                const stats = calculatePersonStats(s, trans);
+                return [s.name, `${stats.totalMilk.toFixed(1)} L`, `Rs.${stats.totalAmount}`, `Rs.${stats.paidAmount}`, `Rs.${stats.balance}`];
+            });
+            
+            doc.autoTable({
+                head: [['Name', 'Total Milk', 'Total Amount', 'Paid', 'Balance']],
+                body: tableData,
+                startY: 25
+            });
+            
+            doc.save('suppliers-report.pdf');
+            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
+        }
+
+        async function generateCustomersReportPDF() {
+            const people = await getAll(STORES.PEOPLE);
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const customers = people.filter(p => p.type === 'customer');
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text('Customers Report - Kharidnay Walon Ka Hisaab', 105, 15, { align: 'center' });
+            
+            const tableData = customers.map(c => {
+                const trans = transactions.filter(t => t.personId === c.id);
+                const stats = calculatePersonStats(c, trans);
+                return [c.name, `${stats.totalMilk.toFixed(1)} L`, `Rs.${stats.totalAmount}`, `Rs.${stats.paidAmount}`, `Rs.${stats.balance}`];
+            });
+            
+            doc.autoTable({
+                head: [['Name', 'Total Milk', 'Total Amount', 'Received', 'Balance']],
+                body: tableData,
+                startY: 25
+            });
+            
+            doc.save('customers-report.pdf');
+            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
+        }
+
+        async function generateMonthlyPDF(month) {
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const people = await getAll(STORES.PEOPLE);
+            const monthTrans = transactions.filter(t => t.date?.substring(0, 7) === month);
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text(`Monthly Report - ${month}`, 105, 15, { align: 'center' });
+            
+            const tableData = monthTrans.map(t => {
+                const person = people.find(p => p.id === t.personId);
+                return [t.date, t.type, person?.name || '-', `${t.quantity || '-'} L`, `Rs.${t.totalAmount || t.amount || 0}`];
+            });
+            
+            doc.autoTable({
+                head: [['Date', 'Type', 'Person', 'Qty', 'Amount']],
+                body: tableData,
+                startY: 25
+            });
+            
+            doc.save(`milk-report-${month}.pdf`);
+            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
+        }
+
+        async function generateDateRangePDF(from, to) {
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const people = await getAll(STORES.PEOPLE);
+            const rangeTrans = transactions.filter(t => t.date >= from && t.date <= to);
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text(`Report: ${from} to ${to}`, 105, 15, { align: 'center' });
+            
+            const tableData = rangeTrans.map(t => {
+                const person = people.find(p => p.id === t.personId);
+                return [t.date, t.type, person?.name || '-', `${t.quantity || '-'} L`, `Rs.${t.totalAmount || t.amount || 0}`];
+            });
+            
+            doc.autoTable({
+                head: [['Date', 'Type', 'Person', 'Qty', 'Amount']],
+                body: tableData,
+                startY: 25
+            });
+            
+            doc.save(`milk-report-${from}-${to}.pdf`);
+            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
+        }
+
+        // ==================== SETTINGS ====================
+        function loadSettings() {
+            document.getElementById('defaultBuyPrice').value = localStorage.getItem('defaultBuyPrice') || '';
+            document.getElementById('defaultSellPrice').value = localStorage.getItem('defaultSellPrice') || '';
+        }
+
+        function saveSettings() {
+            localStorage.setItem('defaultBuyPrice', document.getElementById('defaultBuyPrice').value);
+            localStorage.setItem('defaultSellPrice', document.getElementById('defaultSellPrice').value);
+            showToast('✅ سیٹنگز محفوظ ہو گئیں');
+        }
+
+        async function exportAllData() {
+            const people = await getAll(STORES.PEOPLE);
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            
+            const data = { people, transactions, exportDate: new Date().toISOString() };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `milk-record-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            showToast('✅ ڈیٹا ایکسپورٹ ہو گیا');
+        }
+
+        async function importAllData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Import people
+                    if (data.people) {
+                        for (const person of data.people) {
+                            delete person.id;
+                            await addItem(STORES.PEOPLE, person);
+                        }
+                    }
+                    
+                    // Import transactions
+                    if (data.transactions) {
+                        for (const trans of data.transactions) {
+                            delete trans.id;
+                            await addItem(STORES.TRANSACTIONS, trans);
+                        }
+                    }
+                    
+                    showToast(`✅ ڈیٹا امپورٹ ہو گیا`);
+                    loadDashboard();
+                } catch (error) {
+                    showToast('❌ فائل درست نہیں', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function confirmClearAllData() {
+            document.getElementById('deleteMessage').textContent = 'کیا آپ واقعی تمام ڈیٹا صاف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں ہو سکتا!';
+            document.getElementById('confirmDeleteBtn').onclick = async () => {
+                const transaction = db.transaction([STORES.PEOPLE, STORES.TRANSACTIONS], 'readwrite');
+                transaction.objectStore(STORES.PEOPLE).clear();
+                transaction.objectStore(STORES.TRANSACTIONS).clear();
+                
+                closeModal('deleteModal');
+                showToast('✅ تمام ڈیٹا صاف ہو گیا');
+                loadDashboard();
+            };
+            openModal('deleteModal');
+        }
+
+        // ==================== PWA ====================
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            loadDashboard();
+            
+            // Register Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Error', err));
+            }
+        });
+    </script>
+</body>
+</html>
