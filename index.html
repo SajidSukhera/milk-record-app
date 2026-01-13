@@ -11,9 +11,6 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="icon" type="image/png" href="icon-192.png">
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-    
     <style>
         * {
             margin: 0;
@@ -47,6 +44,23 @@
             padding-bottom: 80px;
         }
 
+        /* Print Styles */
+        @media print {
+    body * { visibility: hidden; }
+    .print-area, .print-area * { visibility: visible; }
+    .print-area {
+        display: block !important;   /* ✅ یہی اصل حل ہے */
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+        padding: 20px;
+    }
+    .header, .bottom-nav, .btn, button { display: none !important; }
+}
+        }
+
         /* Header */
         .header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -67,6 +81,64 @@
             max-width: 700px;
             margin: 0 auto;
             padding: 15px;
+        }
+
+        /* Quick Entry Section - اب سب سے اوپر */
+        .quick-entry-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--primary-light);
+        }
+
+        .quick-entry-title {
+            font-size: 1.2rem;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .quick-action {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 20px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .quick-action:active {
+            transform: scale(0.95);
+        }
+
+        .quick-action span { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+        .quick-action p { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); }
+
+        .quick-action.buy {
+            border-color: var(--success);
+            background: linear-gradient(135deg, white, var(--success-light));
+        }
+
+        .quick-action.sell {
+            border-color: var(--warning);
+            background: linear-gradient(135deg, white, var(--warning-light));
+        }
+
+        .quick-action.person {
+            border-color: var(--purple);
+            background: linear-gradient(135deg, white, var(--purple-light));
         }
 
         /* Dashboard */
@@ -99,21 +171,17 @@
             opacity: 0.1;
         }
 
-        .stat-card.suppliers::before { background: var(--success); }
-        .stat-card.customers::before { background: var(--warning); }
+        .stat-card.people::before { background: var(--purple); }
         .stat-card.buy::before { background: var(--success); }
         .stat-card.sell::before { background: var(--warning); }
         .stat-card.balance::before { background: var(--danger); }
-        .stat-card.total::before { background: var(--primary); }
 
         .stat-card:hover { transform: translateY(-3px); }
 
-        .stat-card.suppliers { border-top: 4px solid var(--success); }
-        .stat-card.customers { border-top: 4px solid var(--warning); }
+        .stat-card.people { border-top: 4px solid var(--purple); }
         .stat-card.buy { border-top: 4px solid var(--success); }
         .stat-card.sell { border-top: 4px solid var(--warning); }
         .stat-card.balance { border-top: 4px solid var(--danger); }
-        .stat-card.total { border-top: 4px solid var(--primary); }
 
         .stat-card h3 {
             font-size: 0.8rem;
@@ -218,50 +286,6 @@
             gap: 15px;
         }
 
-        /* Type Selector */
-        .type-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .type-btn {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            background: white;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.3s;
-        }
-
-        .type-btn span { display: block; font-size: 1.5rem; margin-bottom: 5px; }
-
-        .type-btn.buy.active {
-            border-color: var(--success);
-            background: var(--success-light);
-            color: var(--success);
-        }
-
-        .type-btn.sell.active {
-            border-color: var(--warning);
-            background: var(--warning-light);
-            color: #E65100;
-        }
-
-        .type-btn.supplier.active {
-            border-color: var(--success);
-            background: var(--success-light);
-            color: var(--success);
-        }
-
-        .type-btn.customer.active {
-            border-color: var(--warning);
-            background: var(--warning-light);
-            color: #E65100;
-        }
-
         /* Buttons */
         .btn {
             width: 100%;
@@ -320,24 +344,13 @@
             overflow: hidden;
             cursor: pointer;
             transition: all 0.3s;
+            border-right: 5px solid var(--purple);
         }
 
         .person-card:hover {
             transform: translateX(-5px);
             box-shadow: var(--shadow-lg);
         }
-
-        .person-card::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 5px;
-        }
-
-        .person-card.supplier::before { background: var(--success); }
-        .person-card.customer::before { background: var(--warning); }
 
         .person-header {
             display: flex;
@@ -353,23 +366,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .person-badge {
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .person-badge.supplier {
-            background: var(--success-light);
-            color: var(--success);
-        }
-
-        .person-badge.customer {
-            background: var(--warning-light);
-            color: #E65100;
         }
 
         .person-stats {
@@ -523,11 +519,6 @@
             margin-bottom: 5px;
         }
 
-        .ledger-header .person-type {
-            opacity: 0.9;
-            font-size: 0.9rem;
-        }
-
         .ledger-summary {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -554,9 +545,8 @@
             font-weight: bold;
         }
 
-        .ledger-stat.milk .value { color: var(--primary); }
-        .ledger-stat.amount .value { color: var(--success); }
-        .ledger-stat.paid .value { color: var(--purple); }
+        .ledger-stat.buy .value { color: var(--success); }
+        .ledger-stat.sell .value { color: var(--warning); }
         .ledger-stat.balance .value.positive { color: var(--success); }
         .ledger-stat.balance .value.negative { color: var(--danger); }
 
@@ -683,8 +673,6 @@
             max-width: 450px;
             max-height: 90vh;
             overflow-y: auto;
-            transform: scale(0.9);
-            transition: transform 0.3s;
         }
 
         .modal-overlay.active .modal { transform: scale(1); }
@@ -767,47 +755,6 @@
             color: var(--text-dark);
         }
 
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .quick-action {
-            background: white;
-            border: none;
-            padding: 20px 15px;
-            border-radius: 15px;
-            cursor: pointer;
-            text-align: center;
-            box-shadow: var(--shadow);
-            transition: all 0.3s;
-        }
-
-        .quick-action:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .quick-action span { font-size: 2rem; display: block; margin-bottom: 8px; }
-        .quick-action p { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
-
-        .quick-action.buy { border-top: 4px solid var(--success); }
-        .quick-action.sell { border-top: 4px solid var(--warning); }
-        .quick-action.supplier { border-top: 4px solid var(--success); }
-        .quick-action.customer { border-top: 4px solid var(--warning); }
-
-        /* Responsive */
-        @media (max-width: 500px) {
-            .form-row { grid-template-columns: 1fr; }
-            .person-stats { grid-template-columns: repeat(2, 1fr); }
-            .ledger-summary { grid-template-columns: 1fr 1fr; }
-            .dashboard { grid-template-columns: repeat(2, 1fr); }
-            .stat-card .value { font-size: 1.3rem; }
-        }
-
         /* Section Headers */
         .section-header {
             display: flex;
@@ -823,6 +770,20 @@
             align-items: center;
             gap: 8px;
         }
+
+        /* Print Area - hidden by default */
+        .print-area {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .form-row { grid-template-columns: 1fr; }
+            .person-stats { grid-template-columns: repeat(2, 1fr); }
+            .ledger-summary { grid-template-columns: 1fr 1fr; }
+            .dashboard { grid-template-columns: repeat(2, 1fr); }
+            .stat-card .value { font-size: 1.3rem; }
+        }
     </style>
 </head>
 <body>
@@ -835,17 +796,40 @@
     <div class="container">
         <!-- ======== HOME PAGE ======== -->
         <div class="page active" id="homePage">
+            <!-- Quick Entry Section - اب سب سے اوپر! -->
+            <div class="quick-entry-section">
+                <div class="quick-entry-title">⚡ فوری اندراج</div>
+                <div class="quick-actions">
+                    <button class="quick-action buy" onclick="openTransactionModal('buy')">
+                        <span>📥</span>
+                        <p>دودھ خریدیں</p>
+                    </button>
+                    <button class="quick-action sell" onclick="openTransactionModal('sell')">
+                        <span>📤</span>
+                        <p>دودھ بیچیں</p>
+                    </button>
+                    <button class="quick-action person" onclick="openPersonModal()">
+                        <span>👤</span>
+                        <p>نیا شخص</p>
+                    </button>
+                    <button class="quick-action person" onclick="showPage('people')">
+                        <span>📋</span>
+                        <p>تمام کھاتے</p>
+                    </button>
+                </div>
+            </div>
+
             <!-- Dashboard Stats -->
             <div class="dashboard">
-                <div class="stat-card suppliers">
-                    <h3>👨‍🌾 بیچنے والے</h3>
-                    <div class="value" id="totalSuppliers">0</div>
-                    <div class="unit">کھاتے</div>
+                <div class="stat-card people">
+                    <h3>👥 کل کھاتے</h3>
+                    <div class="value" id="totalPeople">0</div>
+                    <div class="unit">لوگ</div>
                 </div>
-                <div class="stat-card customers">
-                    <h3>🛒 خریدنے والے</h3>
-                    <div class="value" id="totalCustomers">0</div>
-                    <div class="unit">کھاتے</div>
+                <div class="stat-card balance">
+                    <h3>📊 نیٹ بیلنس</h3>
+                    <div class="value" id="netBalance">0</div>
+                    <div class="unit">روپے</div>
                 </div>
                 <div class="stat-card buy">
                     <h3>📥 کل خریداری</h3>
@@ -857,36 +841,6 @@
                     <div class="value" id="totalSellLiters">0</div>
                     <div class="unit">لیٹر</div>
                 </div>
-                <div class="stat-card balance">
-                    <h3>💰 وصولی باقی</h3>
-                    <div class="value" id="totalReceivable">0</div>
-                    <div class="unit">روپے</div>
-                </div>
-                <div class="stat-card total">
-                    <h3>💸 ادائیگی باقی</h3>
-                    <div class="value" id="totalPayable">0</div>
-                    <div class="unit">روپے</div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <button class="quick-action buy" onclick="openTransactionModal('buy')">
-                    <span>📥</span>
-                    <p>دودھ خریدیں</p>
-                </button>
-                <button class="quick-action sell" onclick="openTransactionModal('sell')">
-                    <span>📤</span>
-                    <p>دودھ بیچیں</p>
-                </button>
-                <button class="quick-action supplier" onclick="openPersonModal('supplier')">
-                    <span>👨‍🌾</span>
-                    <p>بیچنے والا شامل کریں</p>
-                </button>
-                <button class="quick-action customer" onclick="openPersonModal('customer')">
-                    <span>🛒</span>
-                    <p>خریدنے والا شامل کریں</p>
-                </button>
             </div>
 
             <!-- Recent Transactions -->
@@ -899,13 +853,6 @@
 
         <!-- ======== PEOPLE PAGE ======== -->
         <div class="page" id="peoplePage">
-            <!-- Tabs for Suppliers/Customers -->
-            <div class="main-tabs">
-                <button class="main-tab active" onclick="filterPeople('all')">سب</button>
-                <button class="main-tab" onclick="filterPeople('supplier')">👨‍🌾 بیچنے والے</button>
-                <button class="main-tab" onclick="filterPeople('customer')">🛒 خریدنے والے</button>
-            </div>
-
             <!-- Search -->
             <div class="filter-section">
                 <div class="filter-row">
@@ -941,7 +888,7 @@
             <!-- Records Header -->
             <div class="section-header">
                 <h2>📋 ریکارڈز</h2>
-                <button class="btn btn-sm btn-primary" onclick="generateAllRecordsPDF()">📄 PDF</button>
+                <button class="btn btn-sm btn-primary" onclick="printAllRecords()">🖨️ پرنٹ</button>
             </div>
 
             <!-- Records List -->
@@ -956,24 +903,27 @@
 
             <div class="ledger-header" id="ledgerHeader">
                 <h2 id="ledgerPersonName">-</h2>
-                <p class="person-type" id="ledgerPersonType">-</p>
             </div>
 
             <!-- Ledger Summary -->
             <div class="ledger-summary">
-                <div class="ledger-stat milk">
-                    <div class="label">🥛 کل دودھ</div>
-                    <div class="value" id="ledgerTotalMilk">0 لیٹر</div>
+                <div class="ledger-stat buy">
+                    <div class="label">📥 خریدا</div>
+                    <div class="value" id="ledgerBuyMilk">0 لیٹر</div>
                 </div>
-                <div class="ledger-stat amount">
-                    <div class="label">💰 کل رقم</div>
-                    <div class="value" id="ledgerTotalAmount">0 ₨</div>
+                <div class="ledger-stat sell">
+                    <div class="label">📤 بیچا</div>
+                    <div class="value" id="ledgerSellMilk">0 لیٹر</div>
                 </div>
-                <div class="ledger-stat paid">
-                    <div class="label">✅ ادا شدہ</div>
-                    <div class="value" id="ledgerPaidAmount">0 ₨</div>
+                <div class="ledger-stat buy">
+                    <div class="label">💰 خرید رقم</div>
+                    <div class="value" id="ledgerBuyAmount">0 ₨</div>
                 </div>
-                <div class="ledger-stat balance">
+                <div class="ledger-stat sell">
+                    <div class="label">💵 فروخت رقم</div>
+                    <div class="value" id="ledgerSellAmount">0 ₨</div>
+                </div>
+                <div class="ledger-stat balance" style="grid-column: span 2;">
                     <div class="label">📊 بیلنس</div>
                     <div class="value" id="ledgerBalance">0 ₨</div>
                 </div>
@@ -981,13 +931,13 @@
 
             <!-- Actions -->
             <div class="quick-actions" id="ledgerActions">
-                <!-- Dynamic based on person type -->
+                <!-- Dynamic -->
             </div>
 
             <!-- Ledger Transactions -->
             <div class="section-header">
                 <h2>📋 لین دین کی تفصیل</h2>
-                <button class="btn btn-sm btn-primary" onclick="generateLedgerPDF()">📄 PDF</button>
+                <button class="btn btn-sm btn-primary" onclick="printLedger()">🖨️ پرنٹ</button>
             </div>
             <div id="ledgerTransactions"></div>
         </div>
@@ -1005,15 +955,9 @@
             </div>
 
             <div class="report-card">
-                <h3>👨‍🌾 بیچنے والوں کی رپورٹ</h3>
-                <div id="suppliersReportContent"></div>
-                <button class="btn btn-primary" onclick="generateSuppliersReportPDF()" style="margin-top: 15px;">📄 PDF ڈاؤنلوڈ</button>
-            </div>
-
-            <div class="report-card">
-                <h3>🛒 خریدنے والوں کی رپورٹ</h3>
-                <div id="customersReportContent"></div>
-                <button class="btn btn-warning" onclick="generateCustomersReportPDF()" style="margin-top: 15px;">📄 PDF ڈاؤنلوڈ</button>
+                <h3>👥 تمام کھاتوں کی رپورٹ</h3>
+                <div id="allPeopleReportContent"></div>
+                <button class="btn btn-primary" onclick="printAllPeopleReport()" style="margin-top: 15px;">🖨️ پرنٹ</button>
             </div>
 
             <div class="report-card">
@@ -1065,11 +1009,13 @@
             <div class="form-section">
                 <h3 class="form-title">ℹ️ ایپ کے بارے میں</h3>
                 <p style="color: #666; font-size: 0.9rem; line-height: 1.8;">
-                    یہ ایپ گھریلو دودھ کی خرید و فروخت کا ریکارڈ رکھنے کے لیے ہے۔ 
-                    ہر بیچنے والے اور خریدنے والے کا الگ کھاتا رکھیں۔
+                    ✅ ایک شخص کبھی خریدار، کبھی بیچنے والا ہو سکتا ہے<br>
+                    ✅ اردو اور عربی میں پرنٹ<br>
+                    ✅ آف لائن کام کرتی ہے<br>
+                    ✅ موبائل فرینڈلی
                 </p>
                 <p style="color: #999; font-size: 0.8rem; margin-top: 10px;">
-                    ورژن 2.0.0
+                    ورژن 2.5.0
                 </p>
             </div>
         </div>
@@ -1110,18 +1056,6 @@
             </div>
             <form id="personForm">
                 <input type="hidden" id="personId">
-                
-                <div class="type-selector">
-                    <button type="button" class="type-btn supplier active" onclick="selectPersonType('supplier')">
-                        <span>👨‍🌾</span>
-                        بیچنے والا
-                    </button>
-                    <button type="button" class="type-btn customer" onclick="selectPersonType('customer')">
-                        <span>🛒</span>
-                        خریدنے والا
-                    </button>
-                </div>
-                <input type="hidden" id="personType" value="supplier">
 
                 <div class="form-group">
                     <label>👤 نام</label>
@@ -1160,7 +1094,7 @@
                 <input type="hidden" id="transactionType" value="buy">
 
                 <div class="form-group">
-                    <label id="transactionPersonLabel">👨‍🌾 بیچنے والا منتخب کریں</label>
+                    <label id="transactionPersonLabel">👤 شخص منتخب کریں</label>
                     <select id="transactionPerson" required>
                         <option value="">منتخب کریں...</option>
                     </select>
@@ -1206,7 +1140,7 @@
     <div class="modal-overlay" id="paymentModal">
         <div class="modal">
             <div class="modal-header">
-                <h2>💵 ادائیگی</h2>
+                <h2>💵 ادائیگی/وصولی</h2>
                 <button class="modal-close" onclick="closeModal('paymentModal')">&times;</button>
             </div>
             <form id="paymentForm">
@@ -1232,7 +1166,7 @@
                     <textarea id="paymentNotes" rows="2" placeholder="ادائیگی کی تفصیل..."></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-success">✅ ادائیگی محفوظ کریں</button>
+                <button type="submit" class="btn btn-success">✅ محفوظ کریں</button>
             </form>
         </div>
     </div>
@@ -1255,10 +1189,13 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
+    <!-- Print Area (hidden) -->
+    <div class="print-area" id="printArea"></div>
+
     <script>
         // ==================== DATABASE SETUP ====================
         let db;
-        const DB_NAME = 'MilkRecordDB_v2';
+        const DB_NAME = 'MilkRecordDB_v3';
         const DB_VERSION = 1;
 
         const STORES = {
@@ -1276,14 +1213,13 @@
                 request.onupgradeneeded = (event) => {
                     const database = event.target.result;
                     
-                    // People Store (بیچنے والے اور خریدنے والے)
+                    // People Store (نوٹ: type field ہٹا دیا - اب کوئی supplier/customer فرق نہیں)
                     if (!database.objectStoreNames.contains(STORES.PEOPLE)) {
                         const peopleStore = database.createObjectStore(STORES.PEOPLE, { keyPath: 'id', autoIncrement: true });
-                        peopleStore.createIndex('type', 'type', { unique: false });
                         peopleStore.createIndex('name', 'name', { unique: false });
                     }
                     
-                    // Transactions Store (لین دین)
+                    // Transactions Store
                     if (!database.objectStoreNames.contains(STORES.TRANSACTIONS)) {
                         const transStore = database.createObjectStore(STORES.TRANSACTIONS, { keyPath: 'id', autoIncrement: true });
                         transStore.createIndex('type', 'type', { unique: false });
@@ -1358,7 +1294,6 @@
                 document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
             }
             
-            // Load page specific data
             switch(page) {
                 case 'home': loadDashboard(); break;
                 case 'people': loadPeople(); break;
@@ -1392,39 +1327,62 @@
             document.getElementById(modalId).classList.remove('active');
         }
 
+        // ==================== BALANCE CALCULATION ====================
+        // اب ایک ہی شخص کے لیے buy اور sell دونوں
+        // Buy = ہم نے خریدا = ہم کو دینا ہے (negative)
+        // Sell = ہم نے بیچا = ہم کو لینا ہے (positive)
+        // Net Balance = Total Sell Amount - Total Buy Amount - Total Paid
+        
+        function calculatePersonStats(person, transactions) {
+            let buyMilk = 0, buyAmount = 0;
+            let sellMilk = 0, sellAmount = 0;
+            let paidAmount = 0;
+            
+            transactions.forEach(t => {
+                if (t.type === 'buy') {
+                    buyMilk += t.quantity;
+                    buyAmount += t.totalAmount || 0;
+                    paidAmount += t.paidAmount || 0;
+                } else if (t.type === 'sell') {
+                    sellMilk += t.quantity;
+                    sellAmount += t.totalAmount || 0;
+                    paidAmount += t.paidAmount || 0;
+                } else if (t.type === 'payment') {
+                    paidAmount += t.amount || 0;
+                }
+            });
+            
+            // Balance:
+            // اگر sell > buy تو وہ ہمیں دے (positive - they owe us)
+            // اگر buy > sell تو ہم انہیں دیں (negative - we owe them)
+            const balance = sellAmount - buyAmount - paidAmount;
+            
+            return { buyMilk, buyAmount, sellMilk, sellAmount, paidAmount, balance };
+        }
+
         // ==================== DASHBOARD ====================
         async function loadDashboard() {
             const people = await getAll(STORES.PEOPLE);
             const transactions = await getAll(STORES.TRANSACTIONS);
             
-            const suppliers = people.filter(p => p.type === 'supplier');
-            const customers = people.filter(p => p.type === 'customer');
-            
-            document.getElementById('totalSuppliers').textContent = suppliers.length;
-            document.getElementById('totalCustomers').textContent = customers.length;
+            document.getElementById('totalPeople').textContent = people.length;
             
             // Calculate totals
             let totalBuyLiters = 0, totalSellLiters = 0;
-            let totalPayable = 0, totalReceivable = 0;
+            let netBalance = 0;
             
-            // Calculate for each person
             for (const person of people) {
                 const personTrans = transactions.filter(t => t.personId === person.id);
-                const balance = calculatePersonBalance(person, personTrans);
+                const stats = calculatePersonStats(person, personTrans);
                 
-                if (person.type === 'supplier') {
-                    totalBuyLiters += personTrans.filter(t => t.type === 'buy').reduce((sum, t) => sum + t.quantity, 0);
-                    if (balance < 0) totalPayable += Math.abs(balance);
-                } else {
-                    totalSellLiters += personTrans.filter(t => t.type === 'sell').reduce((sum, t) => sum + t.quantity, 0);
-                    if (balance > 0) totalReceivable += balance;
-                }
+                totalBuyLiters += stats.buyMilk;
+                totalSellLiters += stats.sellMilk;
+                netBalance += stats.balance;
             }
             
             document.getElementById('totalBuyLiters').textContent = totalBuyLiters.toFixed(1);
             document.getElementById('totalSellLiters').textContent = totalSellLiters.toFixed(1);
-            document.getElementById('totalReceivable').textContent = formatNumber(totalReceivable);
-            document.getElementById('totalPayable').textContent = formatNumber(totalPayable);
+            document.getElementById('netBalance').textContent = formatNumber(Math.round(netBalance));
             
             // Recent transactions
             loadRecentTransactions(transactions, people);
@@ -1454,7 +1412,7 @@
             
             let details = '';
             if (t.type === 'payment') {
-                details = `<p class="record-amount ${t.paymentType === 'received' ? 'credit' : 'debit'}">${formatNumber(t.amount)} روپے</p>`;
+                details = `<p class="record-amount credit">${formatNumber(t.amount)} روپے</p>`;
             } else {
                 details = `
                     <p><strong>${person?.name || 'نامعلوم'}</strong></p>
@@ -1477,7 +1435,8 @@
                     ${showActions ? `
                         <div class="record-actions">
                             <button class="btn-edit" onclick="editTransaction(${t.id})">✏️ ترمیم</button>
-                            <button class="btn-delete" onclick="confirmDeleteTransaction(${t.id})">🗑️ حذف</button>
+                            <button class="btn-delete" onclick="confirmDeleteTransaction(${t.id})">
+🗑️ حذف</button>
                         </div>
                     ` : ''}
                 </div>
@@ -1485,20 +1444,15 @@
         }
 
         // ==================== PEOPLE MANAGEMENT ====================
-        let currentPeopleFilter = 'all';
-
         async function loadPeople() {
             const people = await getAll(STORES.PEOPLE);
             const transactions = await getAll(STORES.TRANSACTIONS);
             
-            let filtered = people;
-            if (currentPeopleFilter !== 'all') {
-                filtered = people.filter(p => p.type === currentPeopleFilter);
-            }
-            
             const searchTerm = document.getElementById('searchPeople')?.value?.toLowerCase() || '';
+            let filtered = people;
+            
             if (searchTerm) {
-                filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm));
+                filtered = people.filter(p => p.name.toLowerCase().includes(searchTerm));
             }
             
             const container = document.getElementById('peopleList');
@@ -1518,60 +1472,26 @@
             updatePersonFilters(people);
         }
 
-        function calculatePersonStats(person, transactions) {
-            let totalMilk = 0, totalAmount = 0, paidAmount = 0;
-            
-            transactions.forEach(t => {
-                if (t.type === 'buy' || t.type === 'sell') {
-                    totalMilk += t.quantity;
-                    totalAmount += t.totalAmount || 0;
-                    paidAmount += t.paidAmount || 0;
-                } else if (t.type === 'payment') {
-                    paidAmount += t.amount || 0;
-                }
-            });
-            
-            const balance = totalAmount - paidAmount;
-            
-            return { totalMilk, totalAmount, paidAmount, balance };
-        }
-
-        function calculatePersonBalance(person, transactions) {
-            const stats = calculatePersonStats(person, transactions);
-            // For supplier: negative balance means we owe them
-            // For customer: positive balance means they owe us
-            if (person.type === 'supplier') {
-                return -stats.balance; // Negative if we owe
-            }
-            return stats.balance; // Positive if they owe
-        }
-
         function createPersonCard(person, stats) {
-            const isSupplier = person.type === 'supplier';
-            const balanceClass = stats.balance > 0 ? 'negative' : (stats.balance < 0 ? 'positive' : '');
-            const balanceLabel = isSupplier ? 
-                (stats.balance > 0 ? 'ادائیگی باقی' : 'کلیئر') :
-                (stats.balance > 0 ? 'وصولی باقی' : 'کلیئر');
+            const balanceClass = stats.balance > 0 ? 'positive' : (stats.balance < 0 ? 'negative' : '');
+            const balanceLabel = stats.balance > 0 ? 'وصولی باقی' : (stats.balance < 0 ? 'ادائیگی باقی' : 'کلیئر');
             
             return `
-                <div class="person-card ${person.type}">
+                <div class="person-card">
                     <div class="person-header">
                         <div class="person-name">
-                            ${isSupplier ? '👨‍🌾' : '🛒'} ${person.name}
+                            👤 ${person.name}
                         </div>
-                        <span class="person-badge ${person.type}">
-                            ${isSupplier ? 'بیچنے والا' : 'خریدنے والا'}
-                        </span>
                     </div>
                     
                     <div class="person-stats">
                         <div class="person-stat">
-                            <div class="label">🥛 دودھ</div>
-                            <div class="value">${stats.totalMilk.toFixed(1)} لیٹر</div>
+                            <div class="label">📥 خریدا</div>
+                            <div class="value">${stats.buyMilk.toFixed(1)} لیٹر</div>
                         </div>
                         <div class="person-stat">
-                            <div class="label">💰 کل رقم</div>
-                            <div class="value">${formatNumber(stats.totalAmount)} ₨</div>
+                            <div class="label">📤 بیچا</div>
+                            <div class="value">${stats.sellMilk.toFixed(1)} لیٹر</div>
                         </div>
                         <div class="person-stat">
                             <div class="label">📊 ${balanceLabel}</div>
@@ -1581,7 +1501,7 @@
                     
                     <div class="person-actions">
                         <button class="btn-ledger" onclick="openLedger(${person.id})">📋 کھاتا</button>
-                        <button class="btn-pay" onclick="openPaymentModal(${person.id})">${isSupplier ? '💸 ادائیگی' : '💵 وصولی'}</button>
+                        <button class="btn-pay" onclick="openPaymentModal(${person.id})">💵 ادائیگی</button>
                         <button class="btn-edit" onclick="editPerson(${person.id})">✏️</button>
                         <button class="btn-delete" onclick="confirmDeletePerson(${person.id})">🗑️</button>
                     </div>
@@ -1589,42 +1509,15 @@
             `;
         }
 
-        function filterPeople(type) {
-            currentPeopleFilter = type;
-            document.querySelectorAll('.main-tabs .main-tab').forEach((tab, index) => {
-                tab.classList.toggle('active', 
-                    (type === 'all' && index === 0) ||
-                    (type === 'supplier' && index === 1) ||
-                    (type === 'customer' && index === 2)
-                );
-            });
-            loadPeople();
-        }
-
         function searchPeople() {
             loadPeople();
         }
 
-        function openPersonModal(type = null) {
+        function openPersonModal() {
             document.getElementById('personForm').reset();
             document.getElementById('personId').value = '';
             document.getElementById('personModalTitle').textContent = '➕ نیا کھاتا';
-            
-            if (type) {
-                selectPersonType(type);
-            } else {
-                selectPersonType('supplier');
-            }
-            
             openModal('personModal');
-        }
-
-        function selectPersonType(type) {
-            document.getElementById('personType').value = type;
-            document.querySelectorAll('#personModal .type-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.classList.contains(type)) btn.classList.add('active');
-            });
         }
 
         async function editPerson(id) {
@@ -1638,7 +1531,6 @@
             document.getElementById('personNotes').value = person.notes || '';
             document.getElementById('personModalTitle').textContent = '✏️ کھاتے میں ترمیم';
             
-            selectPersonType(person.type);
             openModal('personModal');
         }
 
@@ -1647,7 +1539,6 @@
             
             const personId = document.getElementById('personId').value;
             const person = {
-                type: document.getElementById('personType').value,
                 name: document.getElementById('personName').value,
                 phone: document.getElementById('personPhone').value,
                 address: document.getElementById('personAddress').value,
@@ -1675,7 +1566,6 @@
         function confirmDeletePerson(id) {
             document.getElementById('deleteMessage').textContent = 'کیا آپ واقعی یہ کھاتا حذف کرنا چاہتے ہیں؟ اس کے تمام ریکارڈز بھی حذف ہو جائیں گے۔';
             document.getElementById('confirmDeleteBtn').onclick = async () => {
-                // Delete all transactions for this person
                 const transactions = await getAll(STORES.TRANSACTIONS);
                 const personTrans = transactions.filter(t => t.personId === id);
                 for (const t of personTrans) {
@@ -1701,27 +1591,24 @@
             document.getElementById('transactionPaid').value = '0';
             
             const people = await getAll(STORES.PEOPLE);
-            const targetType = type === 'buy' ? 'supplier' : 'customer';
-            const filtered = people.filter(p => p.type === targetType);
             
             const select = document.getElementById('transactionPerson');
             select.innerHTML = '<option value="">منتخب کریں...</option>' +
-                filtered.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+                people.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
             
             if (type === 'buy') {
                 document.getElementById('transactionModalTitle').textContent = '📥 دودھ خریدیں';
-                document.getElementById('transactionPersonLabel').textContent = '👨‍🌾 بیچنے والا منتخب کریں';
+                document.getElementById('transactionPersonLabel').textContent = '👤 کس سے خرید رہے ہیں؟';
                 document.getElementById('transactionPrice').value = localStorage.getItem('defaultBuyPrice') || '';
             } else {
                 document.getElementById('transactionModalTitle').textContent = '📤 دودھ بیچیں';
-                document.getElementById('transactionPersonLabel').textContent = '🛒 خریدنے والا منتخب کریں';
+                document.getElementById('transactionPersonLabel').textContent = '👤 کس کو بیچ رہے ہیں؟';
                 document.getElementById('transactionPrice').value = localStorage.getItem('defaultSellPrice') || '';
             }
             
             openModal('transactionModal');
         }
 
-        // Calculate total on quantity/price change
         document.getElementById('transactionQuantity').addEventListener('input', calculateTotal);
         document.getElementById('transactionPrice').addEventListener('input', calculateTotal);
 
@@ -1771,7 +1658,7 @@
 
         async function editTransaction(id) {
             const transaction = await getById(STORES.TRANSACTIONS, id);
-            if (!transaction) return;
+            if (!transaction || transaction.type === 'payment') return;
             
             await openTransactionModal(transaction.type);
             
@@ -1802,13 +1689,13 @@
             const person = await getById(STORES.PEOPLE, personId);
             const transactions = await getAll(STORES.TRANSACTIONS);
             const personTrans = transactions.filter(t => t.personId === personId);
-            const balance = calculatePersonBalance(person, personTrans);
+            const stats = calculatePersonStats(person, personTrans);
             
             document.getElementById('paymentForm').reset();
             document.getElementById('paymentPersonId').value = personId;
             document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('paymentCurrentBalance').textContent = `${formatNumber(Math.abs(balance))} ₨`;
-            document.getElementById('paymentCurrentBalance').className = `value ${balance >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('paymentCurrentBalance').textContent = `${formatNumber(Math.abs(stats.balance))} ₨`;
+            document.getElementById('paymentCurrentBalance').className = `value ${stats.balance >= 0 ? 'positive' : 'negative'}`;
             
             openModal('paymentModal');
         }
@@ -1817,14 +1704,12 @@
             e.preventDefault();
             
             const personId = parseInt(document.getElementById('paymentPersonId').value);
-            const person = await getById(STORES.PEOPLE, personId);
             
             const payment = {
                 type: 'payment',
                 personId: personId,
                 date: document.getElementById('paymentDate').value,
                 amount: parseFloat(document.getElementById('paymentAmount').value),
-                paymentType: person.type === 'supplier' ? 'paid' : 'received',
                 notes: document.getElementById('paymentNotes').value
             };
             
@@ -1861,35 +1746,30 @@
             
             // Header
             document.getElementById('ledgerPersonName').textContent = person.name;
-            document.getElementById('ledgerPersonType').textContent = person.type === 'supplier' ? '👨‍🌾 بیچنے والا' : '🛒 خریدنے والا';
             
             // Stats
-            document.getElementById('ledgerTotalMilk').textContent = `${stats.totalMilk.toFixed(1)} لیٹر`;
-            document.getElementById('ledgerTotalAmount').textContent = `${formatNumber(stats.totalAmount)} ₨`;
-            document.getElementById('ledgerPaidAmount').textContent = `${formatNumber(stats.paidAmount)} ₨`;
+            document.getElementById('ledgerBuyMilk').textContent = `${stats.buyMilk.toFixed(1)} لیٹر`;
+            document.getElementById('ledgerSellMilk').textContent = `${stats.sellMilk.toFixed(1)} لیٹر`;
+            document.getElementById('ledgerBuyAmount').textContent = `${formatNumber(stats.buyAmount)} ₨`;
+            document.getElementById('ledgerSellAmount').textContent = `${formatNumber(stats.sellAmount)} ₨`;
             
             const balanceEl = document.getElementById('ledgerBalance');
             balanceEl.textContent = `${formatNumber(Math.abs(stats.balance))} ₨`;
-            balanceEl.className = `value ${stats.balance > 0 ? 'negative' : 'positive'}`;
+            balanceEl.className = `value ${stats.balance > 0 ? 'positive' : stats.balance < 0 ? 'negative' : ''}`;
             
             // Actions
-            const actionsHtml = person.type === 'supplier' ? `
+            const actionsHtml = `
                 <button class="quick-action buy" onclick="openTransactionModalForPerson(${personId}, 'buy')">
                     <span>📥</span>
                     <p>دودھ خریدیں</p>
                 </button>
-                <button class="quick-action" style="border-top: 4px solid var(--purple);" onclick="openPaymentModal(${personId})">
-                    <span>💸</span>
-                    <p>ادائیگی کریں</p>
-                </button>
-            ` : `
                 <button class="quick-action sell" onclick="openTransactionModalForPerson(${personId}, 'sell')">
                     <span>📤</span>
                     <p>دودھ بیچیں</p>
                 </button>
-                <button class="quick-action" style="border-top: 4px solid var(--purple);" onclick="openPaymentModal(${personId})">
+                <button class="quick-action person" onclick="openPaymentModal(${personId})">
                     <span>💵</span>
-                    <p>وصولی کریں</p>
+                    <p>ادائیگی</p>
                 </button>
             `;
             document.getElementById('ledgerActions').innerHTML = actionsHtml;
@@ -1909,18 +1789,11 @@
             document.getElementById('transactionPerson').value = personId;
         }
 
-        function generateLedgerPDF() {
-            // Implementation similar to other PDF functions
-            showToast('📄 PDF بن رہی ہے...');
-            // ... PDF generation code
-        }
-
         // ==================== RECORDS PAGE ====================
         async function loadRecords() {
             const transactions = await getAll(STORES.TRANSACTIONS);
             const people = await getAll(STORES.PEOPLE);
             
-            // Apply filters
             const filterType = document.getElementById('filterRecordType').value;
             const filterPerson = document.getElementById('filterPerson').value;
             const filterMonth = document.getElementById('filterMonth').value;
@@ -1939,7 +1812,6 @@
                 filtered = filtered.filter(t => t.date?.substring(0, 7) === filterMonth);
             }
             
-            // Sort by date
             filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
             
             const container = document.getElementById('recordsList');
@@ -1954,7 +1826,6 @@
                 return createTransactionCard(t, person, true);
             }).join('');
             
-            // Update filters
             updatePersonFilters(people);
             updateMonthFilters(transactions);
         }
@@ -1964,7 +1835,7 @@
             const currentValue = select?.value;
             if (select) {
                 select.innerHTML = '<option value="all">سب لوگ</option>' +
-                    people.map(p => `<option value="${p.id}">${p.type === 'supplier' ? '👨‍🌾' : '🛒'} ${p.name}</option>`).join('');
+                    people.map(p => `<option value="${p.id}">👤 ${p.name}</option>`).join('');
                 if (currentValue) select.value = currentValue;
             }
         }
@@ -1987,6 +1858,153 @@
             });
         }
 
+        // ==================== PRINT FUNCTIONS (اردو سپورٹ) ====================
+        async function printAllRecords() {
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const people = await getAll(STORES.PEOPLE);
+            
+            if (transactions.length === 0) {
+                showToast('کوئی ریکارڈ نہیں', 'error');
+                return;
+            }
+            
+            const sorted = transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            let html = `
+                <div style="direction: rtl; font-family: Arial, sans-serif; padding: 20px;">
+                    <h1 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px;">
+                        🥛 دودھ کے تمام ریکارڈز
+                    </h1>
+                    <p style="text-align: center; color: #666; margin: 10px 0;">
+                        تاریخ پرنٹ: ${new Date().toLocaleDateString('ur-PK')}
+                    </p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr style="background: #f0f0f0; border: 1px solid #ddd;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">تاریخ</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">قسم</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">نام</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">مقدار</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">رقم</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            sorted.forEach(t => {
+                const person = people.find(p => p.id === t.personId);
+                const typeText = t.type === 'buy' ? '📥 خریداری' : t.type === 'sell' ? '📤 فروخت' : '💵 ادائیگی';
+                const qty = t.quantity ? `${t.quantity} لیٹر` : '-';
+                const amount = t.totalAmount || t.amount || 0;
+                
+                html += `
+                    <tr style="border: 1px solid #ddd;">
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formatDate(t.date)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${typeText}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${person?.name || '-'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${qty}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formatNumber(amount)} ₨</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = html;
+            printArea.style.display = 'block';
+            
+            setTimeout(() => {
+                window.print();
+                printArea.style.display = 'none';
+            }, 100);
+        }
+
+        async function printLedger() {
+            if (!currentLedgerPersonId) return;
+            
+            const person = await getById(STORES.PEOPLE, currentLedgerPersonId);
+            const transactions = await getAll(STORES.TRANSACTIONS);
+            const personTrans = transactions.filter(t => t.personId === currentLedgerPersonId).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const stats = calculatePersonStats(person, personTrans);
+            
+            let html = `
+                <div style="direction: rtl; font-family: Arial, sans-serif; padding: 20px;">
+                    <h1 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px;">
+                        👤 ${person.name} - کھاتا
+                    </h1>
+                    <p style="text-align: center; color: #666; margin: 10px 0;">
+                        تاریخ پرنٹ: ${new Date().toLocaleDateString('ur-PK')}
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; text-align: center;">
+                        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
+                            <div style="color: #666; font-size: 14px;">📥 خریدا</div>
+                            <div style="font-size: 20px; font-weight: bold;">${stats.buyMilk.toFixed(1)} لیٹر</div>
+                            <div style="color: #666;">${formatNumber(stats.buyAmount)} ₨</div>
+                        </div>
+                        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
+                            <div style="color: #666; font-size: 14px;">📤 بیچا</div>
+                            <div style="font-size: 20px; font-weight: bold;">${stats.sellMilk.toFixed(1)} لیٹر</div>
+                            <div style="color: #666;">${formatNumber(stats.sellAmount)} ₨</div>
+                        </div>
+                        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: ${stats.balance >= 0 ? '#e8f5e9' : '#ffebee'};">
+                            <div style="color: #666; font-size: 14px;">📊 بیلنس</div>
+                            <div style="font-size: 20px; font-weight: bold; color: ${stats.balance >= 0 ? '#4CAF50' : '#f44336'};">
+                                ${formatNumber(Math.abs(stats.balance))} ₨
+                            </div>
+                            <div style="color: #666; font-size: 12px;">${stats.balance > 0 ? 'وصولی باقی' : stats.balance < 0 ? 'ادائیگی باقی' : 'کلیئر'}</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">لین دین کی تفصیل</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <thead>
+                            <tr style="background: #f0f0f0; border: 1px solid #ddd;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">تاریخ</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">قسم</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">مقدار</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">رقم</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            personTrans.forEach(t => {
+                const typeText = t.type === 'buy' ? '📥 خریداری' : t.type === 'sell' ? '📤 فروخت' : '💵 ادائیگی';
+                const qty = t.quantity ? `${t.quantity} لیٹر` : '-';
+                const amount = t.totalAmount || t.amount || 0;
+                
+                html += `
+                    <tr style="border: 1px solid #ddd;">
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formatDate(t.date)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${typeText}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${qty}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formatNumber(amount)} ₨</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = html;
+            printArea.style.display = 'block';
+            
+            setTimeout(() => {
+                window.print();
+                printArea.style.display = 'none';
+            }, 100);
+        }
+
         // ==================== REPORTS ====================
         async function loadReports() {
             const transactions = await getAll(STORES.TRANSACTIONS);
@@ -1994,47 +2012,29 @@
             
             updateMonthFilters(transactions);
             
-            // Suppliers Report
-            const suppliers = people.filter(p => p.type === 'supplier');
-            let suppliersHtml = '<div class="report-stats">';
-            let totalSupplierMilk = 0, totalSupplierAmount = 0, totalSupplierBalance = 0;
+            // All People Report
+            let allPeopleHtml = '<div class="report-stats">';
+            let totalBuyMilk = 0, totalBuyAmount = 0;
+            let totalSellMilk = 0, totalSellAmount = 0;
+            let totalBalance = 0;
             
-            suppliers.forEach(s => {
-                const trans = transactions.filter(t => t.personId === s.id);
-                const stats = calculatePersonStats(s, trans);
-                totalSupplierMilk += stats.totalMilk;
-                totalSupplierAmount += stats.totalAmount;
-                totalSupplierBalance += stats.balance;
+            people.forEach(p => {
+                const trans = transactions.filter(t => t.personId === p.id);
+                const stats = calculatePersonStats(p, trans);
+                totalBuyMilk += stats.buyMilk;
+                totalBuyAmount += stats.buyAmount;
+                totalSellMilk += stats.sellMilk;
+                totalSellAmount += stats.sellAmount;
+                totalBalance += stats.balance;
             });
             
-            suppliersHtml += `
-                <div class="report-stat"><div class="label">کل بیچنے والے</div><div class="value">${suppliers.length}</div></div>
-                <div class="report-stat"><div class="label">کل دودھ خریدا</div><div class="value">${totalSupplierMilk.toFixed(1)} لیٹر</div></div>
-                <div class="report-stat"><div class="label">کل رقم</div><div class="value">${formatNumber(totalSupplierAmount)} ₨</div></div>
-                <div class="report-stat"><div class="label">ادائیگی باقی</div><div class="value">${formatNumber(totalSupplierBalance)} ₨</div></div>
+            allPeopleHtml += `
+                <div class="report-stat"><div class="label">کل لوگ</div><div class="value">${people.length}</div></div>
+                <div class="report-stat"><div class="label">کل خریدا</div><div class="value">${totalBuyMilk.toFixed(1)} لیٹر</div></div>
+                <div class="report-stat"><div class="label">کل بیچا</div><div class="value">${totalSellMilk.toFixed(1)} لیٹر</div></div>
+                <div class="report-stat"><div class="label">نیٹ بیلنس</div><div class="value">${formatNumber(Math.round(totalBalance))} ₨</div></div>
             </div>`;
-            document.getElementById('suppliersReportContent').innerHTML = suppliersHtml;
-            
-            // Customers Report
-            const customers = people.filter(p => p.type === 'customer');
-            let customersHtml = '<div class="report-stats">';
-            let totalCustomerMilk = 0, totalCustomerAmount = 0, totalCustomerBalance = 0;
-            
-            customers.forEach(c => {
-                const trans = transactions.filter(t => t.personId === c.id);
-                const stats = calculatePersonStats(c, trans);
-                totalCustomerMilk += stats.totalMilk;
-                totalCustomerAmount += stats.totalAmount;
-                totalCustomerBalance += stats.balance;
-            });
-            
-            customersHtml += `
-                <div class="report-stat"><div class="label">کل خریدنے والے</div><div class="value">${customers.length}</div></div>
-                <div class="report-stat"><div class="label">کل دودھ بیچا</div><div class="value">${totalCustomerMilk.toFixed(1)} لیٹر</div></div>
-                <div class="report-stat"><div class="label">کل رقم</div><div class="value">${formatNumber(totalCustomerAmount)} ₨</div></div>
-                <div class="report-stat"><div class="label">وصولی باقی</div><div class="value">${formatNumber(totalCustomerBalance)} ₨</div></div>
-            </div>`;
-            document.getElementById('customersReportContent').innerHTML = customersHtml;
+            document.getElementById('allPeopleReportContent').innerHTML = allPeopleHtml;
         }
 
         async function generateMonthlyReport() {
@@ -2062,7 +2062,7 @@
                     <div class="report-stat"><div class="label">💰 خریداری رقم</div><div class="value">${formatNumber(totalBuyAmount)} ₨</div></div>
                     <div class="report-stat"><div class="label">💵 فروخت رقم</div><div class="value">${formatNumber(totalSellAmount)} ₨</div></div>
                 </div>
-                <button class="btn btn-primary" onclick="generateMonthlyPDF('${month}')" style="margin-top: 15px;">📄 PDF ڈاؤنلوڈ</button>
+                <button class="btn btn-primary" onclick="printMonthlyReport('${month}')" style="margin-top: 15px;">🖨️ پرنٹ</button>
             `;
         }
 
@@ -2093,156 +2093,128 @@
                     <div class="report-stat"><div class="label">💰 خریداری رقم</div><div class="value">${formatNumber(totalBuyAmount)} ₨</div></div>
                     <div class="report-stat"><div class="label">💵 فروخت رقم</div><div class="value">${formatNumber(totalSellAmount)} ₨</div></div>
                 </div>
-                <button class="btn btn-primary" onclick="generateDateRangePDF('${from}', '${to}')" style="margin-top: 15px;">📄 PDF ڈاؤنلوڈ</button>
             `;
         }
 
-        // ==================== PDF GENERATION ====================
-        async function generateAllRecordsPDF() {
-            const transactions = await getAll(STORES.TRANSACTIONS);
-            const people = await getAll(STORES.PEOPLE);
-            
-            if (transactions.length === 0) {
-                showToast('کوئی ریکارڈ نہیں', 'error');
-                return;
-            }
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFontSize(18);
-            doc.text('Milk Records - Doodh Ka Hisaab', 105, 15, { align: 'center' });
-            
-            const tableData = transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).map(t => {
-                const person = people.find(p => p.id === t.personId);
-                if (t.type === 'payment') {
-                    return [t.date, 'Payment', person?.name || '-', '-', '-', `Rs.${t.amount}`];
-                }
-                return [
-                    t.date,
-                    t.type === 'buy' ? 'Buy' : 'Sell',
-                    person?.name || '-',
-                    `${t.quantity} L`,
-                    t.pricePerLiter ? `Rs.${t.pricePerLiter}` : '-',
-                    t.totalAmount ? `Rs.${t.totalAmount}` : '-'
-                ];
-            });
-            
-            doc.autoTable({
-                head: [['Date', 'Type', 'Person', 'Qty', 'Rate', 'Total']],
-                body: tableData,
-                startY: 25,
-                styles: { fontSize: 8 }
-            });
-            
-            doc.save('milk-records-all.pdf');
-            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
-        }
-
-        async function generateSuppliersReportPDF() {
-            const people = await getAll(STORES.PEOPLE);
-            const transactions = await getAll(STORES.TRANSACTIONS);
-            const suppliers = people.filter(p => p.type === 'supplier');
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFontSize(18);
-            doc.text('Suppliers Report - Bechnay Walon Ka Hisaab', 105, 15, { align: 'center' });
-            
-            const tableData = suppliers.map(s => {
-                const trans = transactions.filter(t => t.personId === s.id);
-                const stats = calculatePersonStats(s, trans);
-                return [s.name, `${stats.totalMilk.toFixed(1)} L`, `Rs.${stats.totalAmount}`, `Rs.${stats.paidAmount}`, `Rs.${stats.balance}`];
-            });
-            
-            doc.autoTable({
-                head: [['Name', 'Total Milk', 'Total Amount', 'Paid', 'Balance']],
-                body: tableData,
-                startY: 25
-            });
-            
-            doc.save('suppliers-report.pdf');
-            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
-        }
-
-        async function generateCustomersReportPDF() {
-            const people = await getAll(STORES.PEOPLE);
-            const transactions = await getAll(STORES.TRANSACTIONS);
-            const customers = people.filter(p => p.type === 'customer');
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFontSize(18);
-            doc.text('Customers Report - Kharidnay Walon Ka Hisaab', 105, 15, { align: 'center' });
-            
-            const tableData = customers.map(c => {
-                const trans = transactions.filter(t => t.personId === c.id);
-                const stats = calculatePersonStats(c, trans);
-                return [c.name, `${stats.totalMilk.toFixed(1)} L`, `Rs.${stats.totalAmount}`, `Rs.${stats.paidAmount}`, `Rs.${stats.balance}`];
-            });
-            
-            doc.autoTable({
-                head: [['Name', 'Total Milk', 'Total Amount', 'Received', 'Balance']],
-                body: tableData,
-                startY: 25
-            });
-            
-            doc.save('customers-report.pdf');
-            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
-        }
-
-        async function generateMonthlyPDF(month) {
+        async function printMonthlyReport(month) {
             const transactions = await getAll(STORES.TRANSACTIONS);
             const people = await getAll(STORES.PEOPLE);
             const monthTrans = transactions.filter(t => t.date?.substring(0, 7) === month);
             
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const buyTrans = monthTrans.filter(t => t.type === 'buy');
+            const sellTrans = monthTrans.filter(t => t.type === 'sell');
             
-            doc.setFontSize(18);
-            doc.text(`Monthly Report - ${month}`, 105, 15, { align: 'center' });
+            const totalBuy = buyTrans.reduce((sum, t) => sum + t.quantity, 0);
+            const totalSell = sellTrans.reduce((sum, t) => sum + t.quantity, 0);
+            const totalBuyAmount = buyTrans.reduce((sum, t) => sum + (t.totalAmount || 0), 0);
+            const totalSellAmount = sellTrans.reduce((sum, t) => sum + (t.totalAmount || 0), 0);
             
-            const tableData = monthTrans.map(t => {
+            let html = `
+                <div style="direction: rtl; font-family: Arial, sans-serif; padding: 20px;">
+                    <h1 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px;">
+                        📊 ماہانہ رپورٹ - ${month}
+                    </h1>
+                    
+                    <div style="margin: 30px 0; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+                        <h3 style="margin-bottom: 15px;">خلاصہ</h3>
+                        <p><strong>📥 کل خریداری:</strong> ${totalBuy.toFixed(1)} لیٹر (${formatNumber(totalBuyAmount)} روپے)</p>
+                        <p><strong>📤 کل فروخت:</strong> ${totalSell.toFixed(1)} لیٹر (${formatNumber(totalSellAmount)} روپے)</p>
+                        <p><strong>📊 فرق:</strong> ${(totalSell - totalBuy).toFixed(1)} لیٹر</p>
+                    </div>
+                    
+                    <h3 style="margin-top: 30px;">تفصیلی لین دین</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <thead>
+                            <tr style="background: #f0f0f0;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">تاریخ</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">قسم</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">نام</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">مقدار</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">رقم</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            monthTrans.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(t => {
                 const person = people.find(p => p.id === t.personId);
-                return [t.date, t.type, person?.name || '-', `${t.quantity || '-'} L`, `Rs.${t.totalAmount || t.amount || 0}`];
+                const typeText = t.type === 'buy' ? '📥 خریداری' : t.type === 'sell' ? '📤 فروخت' : '💵 ادائیگی';
+                
+                html += `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formatDate(t.date)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${typeText}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${person?.name || '-'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${t.quantity ? t.quantity + ' لیٹر' : '-'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formatNumber(t.totalAmount || t.amount || 0)} ₨</td>
+                    </tr>
+                `;
             });
             
-            doc.autoTable({
-                head: [['Date', 'Type', 'Person', 'Qty', 'Amount']],
-                body: tableData,
-                startY: 25
-            });
+            html += `</tbody></table></div>`;
             
-            doc.save(`milk-report-${month}.pdf`);
-            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = html;
+            printArea.style.display = 'block';
+            
+            setTimeout(() => {
+                window.print();
+                printArea.style.display = 'none';
+            }, 100);
         }
 
-        async function generateDateRangePDF(from, to) {
-            const transactions = await getAll(STORES.TRANSACTIONS);
+        async function printAllPeopleReport() {
             const people = await getAll(STORES.PEOPLE);
-            const rangeTrans = transactions.filter(t => t.date >= from && t.date <= to);
+            const transactions = await getAll(STORES.TRANSACTIONS);
             
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            let html = `
+                <div style="direction: rtl; font-family: Arial, sans-serif; padding: 20px;">
+                    <h1 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px;">
+                        👥 تمام کھاتوں کی رپورٹ
+                    </h1>
+                    <p style="text-align: center; color: #666; margin: 10px 0;">
+                        تاریخ: ${new Date().toLocaleDateString('ur-PK')}
+                    </p>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr style="background: #f0f0f0;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">نام</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">خریدا</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">بیچا</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">بیلنس</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
             
-            doc.setFontSize(18);
-            doc.text(`Report: ${from} to ${to}`, 105, 15, { align: 'center' });
-            
-            const tableData = rangeTrans.map(t => {
-                const person = people.find(p => p.id === t.personId);
-                return [t.date, t.type, person?.name || '-', `${t.quantity || '-'} L`, `Rs.${t.totalAmount || t.amount || 0}`];
+            people.forEach(p => {
+                const trans = transactions.filter(t => t.personId === p.id);
+                const stats = calculatePersonStats(p, trans);
+                const balanceStatus = stats.balance > 0 ? 'وصولی' : stats.balance < 0 ? 'ادائیگی' : 'کلیئر';
+                
+                html += `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${p.name}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${stats.buyMilk.toFixed(1)} لیٹر<br><small>(${formatNumber(stats.buyAmount)} ₨)</small></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${stats.sellMilk.toFixed(1)} لیٹر<br><small>(${formatNumber(stats.sellAmount)} ₨)</small></td>
+                        <td style="padding: 8px; border: 1px solid #ddd; color: ${stats.balance > 0 ? '#4CAF50' : stats.balance < 0 ? '#f44336' : '#666'};">
+                            ${formatNumber(Math.abs(stats.balance))} ₨<br><small>(${balanceStatus})</small>
+                        </td>
+                    </tr>
+                `;
             });
             
-            doc.autoTable({
-                head: [['Date', 'Type', 'Person', 'Qty', 'Amount']],
-                body: tableData,
-                startY: 25
-            });
+            html += `</tbody></table></div>`;
             
-            doc.save(`milk-report-${from}-${to}.pdf`);
-            showToast('📄 PDF ڈاؤنلوڈ ہو گئی');
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = html;
+            printArea.style.display = 'block';
+            
+            setTimeout(() => {
+                window.print();
+                printArea.style.display = 'none';
+            }, 100);
         }
 
         // ==================== SETTINGS ====================
@@ -2280,7 +2252,6 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     
-                    // Import people
                     if (data.people) {
                         for (const person of data.people) {
                             delete person.id;
@@ -2288,7 +2259,6 @@
                         }
                     }
                     
-                    // Import transactions
                     if (data.transactions) {
                         for (const trans of data.transactions) {
                             delete trans.id;
@@ -2331,7 +2301,6 @@
             await initDB();
             loadDashboard();
             
-            // Register Service Worker
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Error', err));
             }
